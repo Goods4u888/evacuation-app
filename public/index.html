@@ -144,9 +144,29 @@
   .flag.safe{color:var(--green)}
   .flag.haz{color:var(--red-dk)}
   @media (max-width:860px){
-    .main{flex-direction:column}
-    .panel{width:100%;border-left:0;border-top:1px solid var(--border);max-height:50vh}
-    .stage{min-height:300px}
+    html,body{height:auto;min-height:100%}
+    body{display:block;overflow:auto}
+    header{padding:9px 12px}
+    header .hint{margin-left:0;width:100%;border-radius:10px;line-height:1.35}
+    .toolbar{padding:8px 10px;gap:7px}
+    .search-wrap{flex-basis:100%;min-width:0;max-width:none}
+    .btn{padding:9px 12px;font-size:13px}
+    .ability{width:100%;justify-content:space-between}
+    .ability select{flex:1;max-width:220px}
+    .main{display:block;min-height:auto;overflow:visible}
+    .map-col{display:block;padding:8px}
+    .floors{gap:5px;margin-bottom:8px;overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px}
+    .floors button{flex:0 0 auto;padding:6px 12px}
+    .stage{height:48vh;min-height:260px;max-height:430px;flex:none;border-radius:10px}
+    .floor-legend{font-size:11px;gap:8px;margin-top:8px}
+    .panel{width:100%;max-width:none;border-left:0;border-top:1px solid var(--border);max-height:none;min-height:360px;overflow:visible}
+    .panel-tabs{position:sticky;top:0;z-index:20;box-shadow:0 1px 0 var(--border)}
+    .ptab{padding:13px 0;font-size:14px}
+    .panel-head{padding:12px 14px}
+    .steps{max-height:none;overflow:visible;padding:10px 14px}
+    .chat{min-height:360px}
+    .chat-msgs{min-height:220px;max-height:42vh}
+    .chat-input{position:sticky;bottom:0}
   }
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
