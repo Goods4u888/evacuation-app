@@ -1155,8 +1155,15 @@ function selectLocation(nid){
   closeOverlay();
   document.getElementById('search').value='';
   document.getElementById('suggest').classList.remove('open');
-  switchTab('route');
+  showRouteMenu(false);
   computeAndRender();
+}
+
+function showRouteMenu(scroll=true){
+  switchTab('route');
+  if(scroll){
+    setTimeout(()=>document.querySelector('.panel')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
+  }
 }
 
 function renderPanel(fromFloor, fromId, destId, path, totalM){
@@ -1417,6 +1424,7 @@ async function locateAction(text){
     selectLocation(local.e.id);
     busyOff();
     addChat('ai','📍 เจอแล้ว: <b>'+escapeHtml(local.e.label)+'</b> (ชั้น '+local.e.floor+') — ข้อมูลเส้นทางอยู่แท็บ <b>🧭 เส้นทาง</b>');
+    showRouteMenu();
     return;
   }
   const r=await callAI('locate', text);
@@ -1426,6 +1434,7 @@ async function locateAction(text){
   if(loc){
     selectLocation(loc.id);
     addChat('ai','📍 AI ระบุตำแหน่ง: <b>'+escapeHtml(loc.label)+'</b> (ชั้น '+p.floor+') — เส้นทางอยู่ในแท็บ <b>🧭 เส้นทาง</b>');
+    showRouteMenu();
     return;
   }
   if(p && p.floor) addChat('ai','🧭 ดูเหมือนชั้น '+p.floor+' แต่ระบุห้องไม่ชัด — บอกชื่อห้องเพิ่ม เช่น "ห้องประชุมใหญ่" หรือกดเลือกห้องบนแผนที่');
@@ -1474,11 +1483,13 @@ async function hazardAction(text){
     const ok=await hzClearTarget(p.target);
     if(ok) addChat('ai','✅ ปลดเส้นทาง '+TARGET_LABEL[p.target]+' แล้ว — คำนวณเส้นทางใหม่ให้แล้ว');
     else addChat('ai','ไม่ได้มีการกั้น '+TARGET_LABEL[p.target]+' อยู่ก่อนหน้านี้');
+    showRouteMenu();
     return;
   }
   const floor = p.allFloors? 'all' : (p.floor||'all');
   await hzAddFrom(p.target, floor);
   addChat('ai','🚨 บันทึกเหตุ: <b>'+TARGET_LABEL[p.target]+'</b>'+(p.floor?(' ชั้น '+p.floor):'')+' ถูกกั้น — ระบบอ้อมให้อัตโนมัติจนกว่าจะปลด');
+  showRouteMenu();
 }
 
 /* ================= init ================= */
