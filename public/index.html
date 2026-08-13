@@ -1334,8 +1334,8 @@ async function sendChat(){
   try{
     const loc=/อยู่|ใน|ชั้น|floor|room|ใกล้|near|นั่ง|ผมอยู่|ฉันอยู่|เรา/i.test(text);
     const haz=/บันได|stair|ไฟ|ควัน|กั้น|block|fire|smoke|ทางออก|exit|ประตูหนี/i.test(text);
-    if(loc) await locateAction(text);
-    else if(haz) await hazardAction(text);
+    if(haz) await hazardAction(text);
+    else if(loc) await locateAction(text);
     else await chatAction(text);
   }catch(e){
     busyOff();
