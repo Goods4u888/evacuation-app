@@ -565,7 +565,7 @@ function hazardSummary(){
 }
 
 /* ================= instructions ================= */
-function dirOf(pts){ const [a,b]=pts; if(Math.abs(a.x-b.x)<1) return null; return b.x>a.x ? 'ขวา' : 'ซ้าย'; }
+function dirOf(pts){ const [a,b]=pts; if(Math.abs(a.x-b.x)<1) return null; return b.x>a.x ? 'ซ้าย' : 'ขวา'; }
 function roomNameAt(f,rid){ const r=roomById(f,rid); return r ? r.name + (r.nameEn?' ('+r.nameEn+')':'') : null; }
 
 function buildSteps(path){
@@ -579,7 +579,7 @@ function buildSteps(path){
     if(walked>0){
       const wm=Math.round(walked/PX2M);
       steps.push({txt:`เดินตามโถงทางเดินไปทาง${corridorDir==='ขวา'?'ขวา':'ซ้าย'} ~${wm} เมตร`,
-                  sub:`ตามทางเดินหลัก · มุ่งไปทาง${corridorDir==='ขวา'?'จุดรวมพล/ทางออก':'บันได'}`,
+                  sub:'ตามทางเดินหลัก · เดินตามเส้นสีเขียวบนแผนที่',
                   ok:true});
       total+=wm; walked=0; corridorDir=null;
     }
