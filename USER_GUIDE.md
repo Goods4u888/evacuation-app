@@ -1,253 +1,194 @@
-# คู่มือการใช้งาน / User Guide
+# User Guide: Building Evacuation Guide
 
-## ระบบนำทางอพยพอาคาร — Building Evacuation Guide
+คู่มือการใช้งานระบบนำทางอพยพอาคาร
 
----
+## 1. What This App Does
 
-## สารบัญ / Contents
+Building Evacuation Guide helps users find a safe evacuation route from their current room to an assembly point outside the building.
 
-1. [ภาพรวม](#ภาพรวม)
-2. [การเริ่มต้นใช้งาน](#การเริ่มต้นใช้งาน)
-3. [ฟีเจอร์หลัก](#ฟีเจอร์หลัก)
-4. [วิธีใช้งานทีละขั้นตอน](#วิธีใช้งานทีละขั้นตอน)
-5. [โหมดผู้ใช้พิเศษ](#โหมดผู้ใช้พิเศษ)
-6. [การรายงานเหตุฉุกเฉิน](#การรายงานเหตุฉุกเฉิน)
-7. [AI ผู้ช่วยสนทนา](#ai-ผู้ช่วยสนทนา)
-8. [สัญลักษณ์บนแผนที่](#สัญลักษณ์บนแผนที่)
-9. [อาคารตัวอย่าง](#อาคารตัวอย่าง)
-10. [คำถามที่พบบ่อย](#คำถามที่พบบ่อย)
+The app can:
 
----
+- Search for your current room.
+- Show a 2.5D floor map.
+- Calculate the safest route to an assembly point.
+- Avoid blocked stairs, corridors, or exits.
+- Show step-by-step walking instructions.
+- Support different user types, including seniors, children, and wheelchair users.
+- Use AI chat to understand natural language location or hazard reports.
 
-## ภาพรวม
+This demo uses a sample 5-floor building.
 
-ระบบนำทางอพยพอาคารเป็นเว็บแอปพลิเคชันที่ช่วยนำทางผู้คนออกจากอาคารอย่างปลอดภัยเมื่อเกิดเหตุฉุกเฉิน
+## 2. Open The App
 
-**สิ่งที่ระบบทำ:**
-- ถามว่าคุณอยู่ตรงไหนในอาคาร
-- คำนวณเส้นทางที่สั้นที่สุดและปลอดภัยที่สุดไปยังจุดรวมพล
-- แสดงแผนผังชั้นแบบ 2.5D isometric
-- แสดงขั้นตอนเดินทีละชั้น พร้อมระยะทางและเวลาประมาณ
-- อ้อมเส้นทางที่ถูกไฟกั้นโดยอัตโนมัติ
-- ปรับเส้นทางตามความสามารถของผู้ใช้
+Use the deployed website link, for example:
 
----
+`https://evacuation-app.vercel.app`
 
-## การเริ่มต้นใช้งาน
+For local use:
 
-### บนเว็บ (Vercel)
-เปิดลิงก์ที่ได้จาก Vercel โดยตรง ไม่ต้องติดตั้งอะไรเพิ่ม
-
-### บนเครื่อง (Local)
 ```bash
-cd evacuation-app
 npm install
 npm start
 ```
-เปิดเบราว์เซอร์ไปที่ `http://localhost:3001`
 
-### แบบไม่ต้อง Server
-เปิดไฟล์ `public/index.html` โดยตรงในเบราว์เซอร์ได้เลย
-(ฟีเจอร์ AI แชทจะใช้ไม่ได้ แต่ฟีเจอร์อื่นใช้ได้ปกติ)
+Then open:
 
----
+`http://localhost:3001`
 
-## ฟีเจอร์หลัก
+## 3. Start Evacuation
 
-| ฟีเจอร์ | รายละเอียด |
-|---------|-----------|
-| 🔍 ค้นหาห้อง | พิมพ์ชื่อห้องภาษาไทยหรืออังกฤษ มีระบบ autocomplete |
-| 🗺️ แผนผัง 2.5D | แสดงแผนผังอาคารแบบ isometric 3 มิติ |
-| 🧭 เส้นทางอพยพ | คำนวณเส้นทางด้วย Dijkstra algorithm |
-| 🔥 รายงานเหตุ | กั้น/ปลดเส้นทางที่มีไฟไหม้ ควัน หรือสิ่งกีดขวาง |
-| ♿ โหมดผู้ใช้ | ปรับความเร็วและเส้นทางตามผู้สูงอายุ เด็ก หรือวีลแชร์ |
-| 🤖 AI แชท | คุยกับ AI เพื่อระบุตำแหน่งหรือรายงานเหตุ |
+1. Click `เริ่มนำทางอพยพ`.
+2. Choose or search for the room where you are located.
+3. The app will calculate a route automatically.
+4. Follow the green route line on the map.
+5. Read the step-by-step instructions on the right panel.
 
----
+You can also click a room directly on the map.
 
-## วิธีใช้งานทีละขั้นตอน
+## 4. Search For A Room
 
-### ขั้นที่ 1: ระบุตำแหน่งของคุณ
+Use the search box at the top of the app.
 
-มี 3 วิธี:
+Examples:
 
-**วิธี A — ค้นหาด้วยข้อความ**
-1. พิมพ์ชื่อห้องในช่องค้นหา เช่น `205` `Office 401` `ห้องสมุด` `Lobby`
-2. เลือกจาก dropdown ที่แสดง
+- `Lobby`
+- `205`
+- `Office 401`
+- `Library`
+- `Server Room`
+- `ห้องสมุด`
 
-**วิธี B — เลือกรายการ**
-1. กดปุ่ม **🆘 เริ่มนำทางอพยพ**
-2. เลือกชั้นและห้องจากรายการ
+When a matching room appears, select it. The app will set that room as your current location and calculate the route.
 
-**วิธี C — คลิกบนแผนที่**
-1. คลิกที่ห้องโดยตรงบนแผนผัง 2.5D
+## 5. Read The Map
 
-### ขั้นที่ 2: ดูเส้นทาง
+The map shows:
 
-ระบบจะแสดงผลทันที:
-- **แผนผัง** — เส้นทางสีเขียววาดบนแผนผัง พร้อมจุด "คุณ" สีส้ม
-- **แผงขั้นตอน** (ด้านขวา) — แสดงทีละขั้นตอน:
-  1. ออกจากห้อง → เดินตามโถงทางเดิน (ระบุทิศทาง + ระยะเมตร)
-  2. เข้าบันไดหนีไฟ
-  3. ลงบันไดทีละชั้น
-  4. ออกจากอาคาร
-  5. ถึงจุดรวมพล (ปลอดภัย)
-- **สรุป** — ระยะทางรวม (~เมตร) และเวลาประมาณ (~นาที)
+| Symbol / Color | Meaning |
+|---|---|
+| Orange circle | Your current location |
+| Green line | Recommended evacuation route |
+| Blue blocks | Emergency stairs |
+| Yellow blocks | Fire refuge areas |
+| Green markers | Assembly points |
+| Red marks | Blocked or unsafe area |
+| Brown elevator block | Elevator, do not use during fire |
 
-### ขั้นที่ 3: สลับชั้น
+Assembly points:
 
-กดปุ่มแท็บชั้น (ชั้น 1–5) ด้านบนแผนผังเพื่อดูเส้นทางในแต่ละชั้น
+- `จุดรวมพล A` is in front of the building.
+- `จุดรวมพล B` is behind the building.
 
----
+## 6. Switch Floors
 
-## โหมดผู้ใช้พิเศษ
+Use the floor tabs to view different floors.
 
-เลือกจาก dropdown **"ผู้ใช้"** บนแถบเครื่องมือ:
+The route may pass through several floors. Switch floors to see each part of the route.
 
-| โหมด | ความเร็ว | พฤติกรรม |
-|------|---------|----------|
-| ปกติ | 1.2 ม/วินาที | เดินลงบันไดทุกชั้นไปจุดรวมพล |
-| ผู้สูงอายุ | 0.7 ม/วินาที | เดินช้าลง เวลาประมาณนานขึ้น |
-| เด็ก | 0.85 ม/วินาที | ความเร็วปานกลาง |
-| วีลแชร์ | 0.7 ม/วินาที | **ไปจุดหลบอัคคี (Refuge)** ข้างบันได แล้วรอเจ้าหน้าที่ |
+## 7. Report A Hazard
 
-> ⚠️ โหมดวีลแชร์: ระบบจะนำทางไปยัง "จุดหลบอัคคี" ข้างบันไดแทนการลงบันได
-> เพราะผู้ใช้วีลแชร์ไม่สามารถลงบันไดเองได้ ต้องรอเจ้าหน้าที่กู้ภัยมาช่วย
+Use this when a stair, corridor, or exit is blocked by fire, smoke, debris, or another danger.
 
----
+1. Click `รายงานเหตุ`.
+2. Select the hazard location.
+3. Select the floor or choose the whole building.
+4. Click `กั้นเส้นทาง`.
 
-## การรายงานเหตุฉุกเฉิน
+The app will recalculate the route and avoid the blocked area.
 
-### วิธีที่ 1: ใช้ปุ่ม
-1. กดปุ่ม **🚨 รายงานเหตุ**
-2. เลือกตำแหน่งเหตุ (บันได A/B, โถงทางเดิน, ทางออกหน้า/หลัง)
-3. เลือกชั้น (หรือทั้งอาคาร)
-4. กด **🔥 กั้นเส้นทาง** หรือ **✅ ปลดเส้นทาง**
+To remove a hazard:
 
-### วิธีที่ 2: ใช้ AI แชท
-พิมพ์ข้อความ เช่น:
-- `บันได A ชั้น 3 ไฟกั้น`
-- `ปลดบันได B`
-- `ทางออกหลังมีควัน`
-- `โถงทางเดินชั้น 2 กั้น`
+1. Open `รายงานเหตุ`.
+2. Select the same location.
+3. Click `ปลดเส้นทาง`.
 
-### ผลที่เกิดขึ้น
-- เส้นทางที่ผ่านจุดที่ถูกกั้นจะถูก **ตัดออก** โดยอัตโนมัติ
-- ระบบจะคำนวณเส้นทางใหม่ที่ **อ้อม** จุดนั้น
-- แสดงจุดที่ถูกกั้นบนแผนผังด้วย 🔴 สีแดง + กากบาท
-- แสดงแถบ "เหตุที่รายงาน" ด้านบน พร้อมปุ่มลบเพื่อปลด
+## 8. Use AI Chat
 
----
+Click the `แชท AI` tab.
 
-## AI ผู้ช่วยสนทนา
+You can type natural language messages such as:
 
-กดแท็บ **🤖 แชท AI** บนแผงด้านขวา
-
-### สิ่งที่ AI ช่วยได้
-
-**ระบุตำแหน่ง:**
 - `ฉันอยู่ห้อง 205`
-- `ชั้น 3 ห้องเคมี`
-- `near the library`
+- `I am near the library`
+- `บันได A ชั้น 3 มีไฟ`
+- `ปิดทางออกหลัง`
+- `ปลดบันได B`
 
-**รายงานเหตุ:**
-- `บันได B ไฟกั้น`
-- `ปลดบันได A`
-- `ทางออกหน้าถูกปิด`
+The AI can help identify your location, report hazards, or answer basic evacuation questions.
 
-**ถามคำถามทั่วไป:**
-- `เส้นทางนี้ใช้เวลากี่นาที?`
-- `มีทางออกอื่นไหม?`
-- `ต้องทำยังไงต่อ?`
+If AI is unavailable, you can still use search, map selection, and manual hazard reporting.
 
-### Quick Chips
-มีปุ่มลัดด้านล่างช่องแชทให้กดใช้งานได้ทันที
+## 9. User Type Selection
 
-> ⚠️ AI แชทต้องรันผ่าน server (ไม่ทำงานบน static hosting บางตัว เช่น Vercel free tier)
+Use the user type dropdown to adjust estimated walking time and route behavior.
 
----
+| User Type | Behavior |
+|---|---|
+| Normal | Standard evacuation speed |
+| Senior | Slower estimated time |
+| Child | Moderate estimated time |
+| Wheelchair | Routes to a fire refuge area on upper floors |
 
-## สัญลักษณ์บนแผนที่
+For wheelchair users on upper floors, the app routes to a fire refuge area near the stairs instead of assuming the user can descend stairs alone.
 
-| สี/สัญลักษณ์ | ความหมาย |
-|-------------|----------|
-| 🟧 สีส้ม (วงกลม) | จุดที่คุณอยู่ |
-| 🟢 สีเขียว (เส้น) | เส้นทางอพยพที่ปลอดภัย |
-| 🔵 สีฟ้า (สี่เหลี่ยม) | บันไดหนีไฟ |
-| 🟡 สีเหลือง | จุดหลบอัคคี (Refuge) |
-| 🟢 สีเขียวอ่อน | จุดรวมพล / ทางออก |
-| 🔴 สีแดง + กากบาท | จุดที่ถูกไฟกั้น / ห้ามผ่าน |
-| 🟫 สีน้ำตาลอ่อน | ลิฟต์ (ห้ามใช้ในเหตุฉุกเฉิน) |
+## 10. Step-By-Step Route Panel
 
-### สีห้องตามประเภท
+After selecting a room, the route panel shows:
 
-| สี | ประเภท |
-|----|-------|
-| เหลืองอ่อน | ล็อบบี้, ห้องอาหาร, หอประชุม |
-| ฟ้าอ่อน | ห้องปฏิบัติการ, ห้องเรียน |
-| เขียวอ่อน | ทางออก, ห้องรักษาความปลอดภัย |
-| เทาอ่อน | ห้องเก็บของ, ห้องไฟฟ้า |
+- Destination assembly point.
+- Total estimated distance.
+- Estimated time.
+- Walking instructions.
+- Stair instructions.
+- Exit instructions.
 
----
+Follow the instructions in order.
 
-## อาคารตัวอย่าง
+## 11. Safety Notes
 
-อาคาร 5 ชั้น มีรายละเอียดดังนี้:
+- Do not use elevators during a fire or emergency.
+- Follow official emergency signs and staff instructions.
+- If smoke or fire blocks the route, report the hazard and use the recalculated route.
+- Move calmly and do not run.
+- After reaching an assembly point, stay there for headcount.
+- This app is a guide and does not replace official building safety procedures.
 
-| ชั้น | ชื่อ | ห้องเด่น |
-|-----|------|---------|
-| ชั้น 1 | Ground floor | ล็อบบี้, ห้องอาหาร, โรงยิม, หอประชุม |
-| ชั้น 2 | Classrooms | ห้องบรรยาย 201-202, ห้องเรียน 203-206, Computer Lab 207 |
-| ชั้น 3 | Laboratories | ห้องปฏิบัติการ ชีวะ/เคมี/ฟิสิกส์, Server Room 308 |
-| ชั้น 4 | Offices | สำนักงาน 401-402, ห้องประชุมใหญ่ 404 |
-| ชั้น 5 | Library | ห้องสมุด 504, ห้องอ่านหนังสือ 501 |
+## 12. Troubleshooting
 
-**ทางออก:**
-- จุดรวมพล A — หน้าอาคาร (ประตูใหญ่)
-- จุดรวมพล B — หลังอาคาร
+### AI does not respond
 
-**บันไดหนีไฟ:**
-- บันได A — ฝั่งซ้าย (ตะวันตก)
-- บันได B — ฝั่งขวา (ตะวันออก)
+Check that the deployment has:
 
----
+`GEMINI_API_KEY`
 
-## คำถามที่พบบ่อย
+set in Vercel Environment Variables.
 
-**Q: ทำไมต้องใช้บันได ไม่ใช้ลิฟต์?**
-A: ในเหตุเพลิงไหม้ ลิฟต์อาจหยุดทำงาน ไฟฟ้าดับ หรือควันเข้าไปในปล่องลิฟต์
-บันไดหนีไฟเป็นเส้นทางที่ปลอดภัยที่สุด
+Also confirm the Gemini model in `api/ai.js` is available.
 
-**Q: จุดหลบอัคคี (Refuge) คืออะไร?**
-A: พื้นที่ปลอดภัยข้างบันไดทุกชั้น สำหรับผู้ที่ไม่สามารถลงบันไดเองได้
-(เช่น ผู้ใช้วีลแชร์) ให้รอเจ้าหน้าที่กู้ภัยมาช่วย
+### Route does not appear
 
-**Q: เวลาประมาณแม่นยำแค่ไหน?**
-A: เป็นการประมาณเพื่อการสื่อสาร ขึ้นอยู่กับความเร็วเดินจริง สภาพร่างกาย
-และสภาวะในเหตุการณ์จริง
+Try:
 
-**Q: ใช้กับอาคารจริงได้ไหม?**
-A: ได้ แก้ข้อมูล `FLOORS`, `STAIRS` และตำแหน่งทางออกในไฟล์
-`public/index.html` ให้ตรงกับอาคารจริง
+- Selecting a different room.
+- Clearing blocked hazards.
+- Switching to the correct floor tab.
+- Using the search box instead of AI chat.
 
-**Q: ไม่มี Server ใช้ได้ไหม?**
-A: ได้ เปิด `public/index.html` โดยตรงในเบราว์เซอร์
-ฟีเจอร์ทุกอย่างใช้ได้except AI แชท
+### Map labels look crowded
 
----
+The map uses short room labels for readability. Full room names are still available in search results and route instructions.
 
-## ข้อควรจำในเหตุฉุกเฉิน
+## 13. Admin Notes
 
-1. 🧘 **ใจเย็น** — ไม่วิ่ง ไม่แย่งทาง
-2. 🚫 **ไม่ใช้ลิฟต์** — ใช้บันไดหนีไฟเสมอ
-3. 👀 **มองป้ายเขียว** — ป้าย "EXIT" / "หนีไฟ" ชี้ทางออก
-4. 🔥 **ถ้าไฟกั้น** — ย้อนกลับ ใช้บันไดอีกตัว
-5. 🏃 **เดินเร็ว** — แต่ไม่วิ่ง ชิดขวา จับราวบันได
-6. 📱 **แจ้งเหตุ** — โทร 199 (ดับเพลิง) หรือ 191 (ตำรวจ)
-7. 📍 **นับ人数** — ถึงจุดรวมพลแล้ว รอเจ้าหน้าที่นับจำนวน
+To update building data, edit:
 
----
+`public/index.html`
 
-## ติดต่อ
+Main sections:
 
-GitHub: https://github.com/Goods4u888/evacuation-app
+- `FLOORS`
+- `STAIRS`
+- exit and assembly point logic
+- room names and room types
+
+After editing, commit, push to GitHub, and redeploy the Vercel project.
