@@ -763,6 +763,19 @@ function assemblyMarker(g, x, y, label, blocked, labelDy){
   fitText(g,p.x,p.y+labelDy,label,{size:11,weight:800,fill:color,strokeWidth:3});
 }
 
+function stairCallout(g, key, target){
+  const label = key==='SA' ? 'บันได A' : 'บันได B';
+  const box = key==='SA'
+    ? { x:target.x-112, y:target.y-82, w:92, h:34 }
+    : { x:target.x+48, y:target.y+48, w:92, h:34 };
+  const anchor = key==='SA'
+    ? { x:box.x+box.w-10, y:box.y+box.h }
+    : { x:box.x+10, y:box.y };
+  g.appendChild(svgEl('line',{x1:anchor.x,y1:anchor.y,x2:target.x,y2:target.y,stroke:'#ef3340','stroke-width':4,'stroke-linecap':'round'}));
+  g.appendChild(svgEl('rect',{x:box.x,y:box.y,width:box.w,height:box.h,rx:3,fill:'#ef3340'}));
+  fitText(g,box.x+box.w/2,box.y+23,label,{size:18,weight:700,fill:'#fff',stroke:'#ef3340',strokeWidth:.6});
+}
+
 function isoQuad(x, y, w, h, z){
   return [iso(x,y,z), iso(x+w,y,z), iso(x+w,y+h,z), iso(x,y+h,z)];
 }
@@ -854,9 +867,7 @@ function floorSvg(f){
       }
       g.appendChild(svgEl('path',{d,stroke:'#2471a3','stroke-width':2,fill:'none',opacity:.7}));
     }
-    const sl=iso(cx,m.y-8,H+2);
-    const tr=g.appendChild(svgEl('text',{x:sl.x,y:sl.y,'text-anchor':'middle','font-size':12,'font-weight':800,fill:'#1b4f72'},s.label));
-    tr.appendChild(svgEl('tspan',{x:sl.x,dy:14,'font-size':9},s.labelEn));
+    stairCallout(g,s.key,iso(cx,cy,H+8));
   });
 
   // elevator
