@@ -689,6 +689,37 @@ function isoText(x, y, z, attrs, text){
   return svgEl('text', { x: p.x, y: p.y, 'text-anchor': attrs?.anchor || 'middle', 'font-size': attrs?.size || 12, fill: attrs?.fill || '#2c3e50', 'font-weight': attrs?.weight || '400' }, text);
 }
 
+function fitText(g, x, y, text, attrs = {}){
+  const e = svgEl('text', {
+    x, y,
+    'text-anchor': attrs.anchor || 'middle',
+    'font-size': attrs.size || 9,
+    'font-weight': attrs.weight || 700,
+    fill: attrs.fill || '#2c3e50',
+    'font-family': 'Arial, Tahoma, sans-serif',
+    'paint-order': 'stroke',
+    stroke: attrs.stroke || '#ffffff',
+    'stroke-width': attrs.strokeWidth || 2,
+    'stroke-linejoin': 'round'
+  }, text);
+  if(attrs.maxWidth){
+    e.setAttribute('textLength', attrs.maxWidth);
+    e.setAttribute('lengthAdjust', 'spacingAndGlyphs');
+  }
+  g.appendChild(e);
+  return e;
+}
+
+function assemblyMarker(g, x, y, label, blocked, labelDy){
+  const p=iso(x,y,4);
+  const color=blocked?'#922b21':'#117a37';
+  const fill=blocked?'#fde2df':'#dff4e7';
+  g.appendChild(svgEl('circle',{cx:p.x,cy:p.y,r:26,fill,stroke:color,'stroke-width':2,opacity:.96}));
+  g.appendChild(svgEl('circle',{cx:p.x,cy:p.y,r:8,fill:blocked?'#c0392b':'#1e8449'}));
+  g.appendChild(svgEl('path',{d:`M${p.x-10},${p.y+12} Q${p.x},${p.y+1} ${p.x+10},${p.y+12}`,stroke:color,'stroke-width':2,fill:'none','stroke-linecap':'round'}));
+  fitText(g,p.x,p.y+labelDy,label,{size:11,weight:800,fill:color,maxWidth:92,strokeWidth:3});
+}
+
 function isoQuad(x, y, w, h, z){
   return [iso(x,y,z), iso(x+w,y,z), iso(x+w,y+h,z), iso(x,y+h,z)];
 }
@@ -723,6 +754,15 @@ function floorSvg(f){
   const g = document.createElementNS('http://www.w3.org/2000/svg','g');
   g.dataset.floor = f.n;
   const W=ISO.bw, D=ISO.bd, H=ISO.wh;
+  const frontBlocked=BLOCKED.has('EXIT:1:N');
+  const backBlocked=BLOCKED.has('EXIT:1:S');
+
+  // site context around the building
+  g.appendChild(poly(isoQuad(-46,-62,W+92,D+124,0),{fill:'#f4f8f5',stroke:'#d7e5dc','stroke-width':1.5}));
+  g.appendChild(polyPath([iso(W/2,-42,2),iso(W/2,-10,2)],{stroke:frontBlocked?'#c0392b':'#1e8449','stroke-width':3,'stroke-dasharray':'7 6','stroke-linecap':'round',opacity:.8}));
+  g.appendChild(polyPath([iso(W/2,D+10,2),iso(W/2,D+42,2)],{stroke:backBlocked?'#c0392b':'#1e8449','stroke-width':3,'stroke-dasharray':'7 6','stroke-linecap':'round',opacity:.8}));
+  assemblyMarker(g,W/2,-58,'จุดรวมพล A',frontBlocked,-31);
+  assemblyMarker(g,W/2,D+58,'จุดรวมพล B',backBlocked,40);
 
   // south wall (front face)
   g.appendChild(poly([iso(0,D,0),iso(W,D,0),iso(W,D,H),iso(0,D,H)],{fill:'#d5d8dc',stroke:'#9aa7b4','stroke-width':2}));
@@ -736,8 +776,8 @@ function floorSvg(f){
   g.appendChild(poly(isoQuad(0,0,W,D,H),{fill:'#fbfcfe',stroke:'#9aa7b4','stroke-width':2.5}));
 
   // floor label
-  const lp=iso(W/2,-20,H+5);
-  g.appendChild(svgEl('text',{x:lp.x,y:lp.y,'text-anchor':'middle','font-size':16,'font-weight':800,fill:'#5d6d7e'},`${f.label} · ${f.en}`));
+  const lp=iso(W/2,-26,H+5);
+  fitText(g,lp.x,lp.y,`${f.label} · ${f.en}`,{size:13,weight:800,fill:'#4d6174',maxWidth:220,strokeWidth:3});
 
   // corridor
   g.appendChild(poly(isoQuad(0,ISO.cy,W,ISO.ch,H),{fill:'#eef2f6',stroke:'#bcc9d6','stroke-width':1.5}));
@@ -798,10 +838,10 @@ function floorSvg(f){
     const dp=iso(dx,dy,H+1);
     g.appendChild(svgEl('circle',{cx:dp.x,cy:dp.y,r:3,fill:'#fff',stroke:'#7f8c8d','stroke-width':1.5}));
     // labels
-    const lpt=iso(rx+rw/2,ry+rh/2-5,H+1);
-    g.appendChild(svgEl('text',{x:lpt.x,y:lpt.y,'text-anchor':'middle','font-size':12,'font-weight':700,fill:'#2c3e50'},r.name));
-    const ept=iso(rx+rw/2,ry+rh/2+8,H+1);
-    g.appendChild(svgEl('text',{x:ept.x,y:ept.y,'text-anchor':'middle','font-size':9,fill:'#7f8c8d'},r.nameEn));
+    const lpt=iso(rx+rw/2,ry+rh/2-4,H+1);
+    fitText(g,lpt.x,lpt.y,r.name,{size:8.5,weight:800,fill:'#1f3447',maxWidth:82,strokeWidth:2.4});
+    const ept=iso(rx+rw/2,ry+rh/2+7,H+1);
+    fitText(g,ept.x,ept.y,r.nameEn,{size:6.8,weight:600,fill:'#6f7f8d',maxWidth:76,strokeWidth:2});
   }
 
   // refuge zones
@@ -833,24 +873,14 @@ function floorSvg(f){
 
   // ground floor exits & assembly
   if(f.isGround){
-    const frontBlocked=BLOCKED.has('EXIT:1:N');
-    const backBlocked=BLOCKED.has('EXIT:1:S');
     // front exit
     const fe=iso(W/2,-18,H);
     g.appendChild(svgEl('rect',{x:fe.x-30,y:fe.y-7,width:60,height:14,fill:frontBlocked?'#f5b7b1':'#d5f5e3',stroke:frontBlocked?'#922b21':'#1e8449','stroke-width':2,rx:4}));
     g.appendChild(svgEl('text',{x:fe.x,y:fe.y+4,'text-anchor':'middle','font-size':8,'font-weight':700,fill:frontBlocked?'#922b21':'#1e8449'},frontBlocked?'ประตูใหญ่ ⛔':'ประตูใหญ่'));
-    // assembly A
-    const aa=iso(W/2,-45,H);
-    const aaC=svgEl('circle',{cx:aa.x,cy:aa.y,r:10,fill:frontBlocked?'#c0392b':'#1e8449'});aaC.classList.add('pulse');g.appendChild(aaC);
-    g.appendChild(svgEl('text',{x:aa.x,y:aa.y-14,'text-anchor':'middle','font-size':10,'font-weight':800,fill:frontBlocked?'#922b21':'#1e8449'},'จุดรวมพล A'));
     // back exit
     const be=iso(W/2,D+18,H);
     g.appendChild(svgEl('rect',{x:be.x-30,y:be.y-7,width:60,height:14,fill:backBlocked?'#f5b7b1':'#d5f5e3',stroke:backBlocked?'#922b21':'#1e8449','stroke-width':2,rx:4}));
     g.appendChild(svgEl('text',{x:be.x,y:be.y+4,'text-anchor':'middle','font-size':8,'font-weight':700,fill:backBlocked?'#922b21':'#1e8449'},backBlocked?'ทางออกหลัง ⛔':'ทางออกหลัง'));
-    // assembly B
-    const ab=iso(W/2,D+45,H);
-    const abC=svgEl('circle',{cx:ab.x,cy:ab.y,r:10,fill:backBlocked?'#c0392b':'#1e8449'});abC.classList.add('pulse');g.appendChild(abC);
-    g.appendChild(svgEl('text',{x:ab.x,y:ab.y+20,'text-anchor':'middle','font-size':10,'font-weight':800,fill:backBlocked?'#922b21':'#1e8449'},'จุดรวมพล B'));
   }
 
   // route overlay
