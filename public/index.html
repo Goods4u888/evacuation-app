@@ -753,7 +753,7 @@ function mapRoomLabel(r){
   return { title, roomNo };
 }
 
-function assemblyMarker(g, x, y, label, blocked, labelDy){
+function assemblyMarker(g, x, y, label, subLabel, blocked, labelDy){
   const p=iso(x,y,4);
   const color=blocked?'#922b21':'#117a37';
   const fill=blocked?'#fde2df':'#dff4e7';
@@ -761,6 +761,7 @@ function assemblyMarker(g, x, y, label, blocked, labelDy){
   g.appendChild(svgEl('circle',{cx:p.x,cy:p.y,r:8,fill:blocked?'#c0392b':'#1e8449'}));
   g.appendChild(svgEl('path',{d:`M${p.x-10},${p.y+12} Q${p.x},${p.y+1} ${p.x+10},${p.y+12}`,stroke:color,'stroke-width':2,fill:'none','stroke-linecap':'round'}));
   fitText(g,p.x,p.y+labelDy,label,{size:11,weight:800,fill:color,strokeWidth:3});
+  fitText(g,p.x,p.y+labelDy+14,subLabel,{size:8.5,weight:800,fill:color,strokeWidth:2.5});
 }
 
 function stairCallout(g, key, target){
@@ -817,8 +818,8 @@ function floorSvg(f){
   g.appendChild(poly(isoQuad(-46,-62,W+92,D+124,0),{fill:'#f4f8f5',stroke:'#d7e5dc','stroke-width':1.5}));
   g.appendChild(polyPath([iso(W/2,-10,2),iso(W+18,-18,2),iso(W+42,-22,2)],{stroke:frontBlocked?'#c0392b':'#1e8449','stroke-width':3,'stroke-dasharray':'7 6','stroke-linecap':'round',opacity:.8}));
   g.appendChild(polyPath([iso(W/2,D+10,2),iso(W/2,D+42,2)],{stroke:backBlocked?'#c0392b':'#1e8449','stroke-width':3,'stroke-dasharray':'7 6','stroke-linecap':'round',opacity:.8}));
-  assemblyMarker(g,W+54,-22,'จุดรวมพล A',frontBlocked,-31);
-  assemblyMarker(g,W/2,D+58,'จุดรวมพล B',backBlocked,40);
+  assemblyMarker(g,W+54,-22,'จุดรวมพล A','ประตูใหญ่',frontBlocked,-31);
+  assemblyMarker(g,W/2,D+58,'จุดรวมพล B','ทางออกหลัง',backBlocked,40);
 
   // south wall (front face)
   g.appendChild(poly([iso(0,D,0),iso(W,D,0),iso(W,D,H),iso(0,D,H)],{fill:'#d5d8dc',stroke:'#9aa7b4','stroke-width':2}));
