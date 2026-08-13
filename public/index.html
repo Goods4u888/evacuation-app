@@ -790,18 +790,27 @@ function mapTree(g, x, y, r=5){
 }
 
 function siteContext(g, W, D, frontBlocked, backBlocked){
-  g.appendChild(poly(isoQuad(-70,-82,W+150,D+158,0),{fill:'#eef7f0',stroke:'#cfe2d6','stroke-width':1.6}));
-  g.appendChild(poly(isoQuad(-54,D+48,W+130,34,1),{fill:'#d6dde3',stroke:'#b9c4cc','stroke-width':1.2}));
-  g.appendChild(polyPath([iso(-45,D+65,2),iso(W+64,D+65,2)],{stroke:'#ffffff','stroke-width':2,'stroke-dasharray':'10 10',opacity:.9}));
-  g.appendChild(poly(isoQuad(W+18,-72,58,D+112,1),{fill:'#d6dde3',stroke:'#b9c4cc','stroke-width':1.2}));
-  g.appendChild(polyPath([iso(W+47,-62,2),iso(W+47,D+28,2)],{stroke:'#ffffff','stroke-width':2,'stroke-dasharray':'10 10',opacity:.9}));
-  g.appendChild(poly(isoQuad(-46,-62,54,42,1),{fill:'#dcefe4',stroke:'#bdd9c7','stroke-width':1}));
-  g.appendChild(poly(isoQuad(-48,30,38,68,1),{fill:'#e8f3df',stroke:'#cbdcbc','stroke-width':1}));
-  g.appendChild(poly(isoQuad(W+1,D+13,44,34,1),{fill:'#f3f5f7',stroke:'#c6d0d8','stroke-width':1}));
-  fitText(g,iso(W+23,D+33,3).x,iso(W+23,D+33,3).y,'Parking',{size:7,weight:700,fill:'#6b7884',strokeWidth:2});
-  [-34,-18,-2].forEach((x,i)=>mapTree(g,x,-45+i*8,4));
-  [W+36,W+54,W+66].forEach((x,i)=>mapTree(g,x,30+i*30,4));
-  [18,42,66].forEach((x,i)=>mapTree(g,x,D+58+i*3,4));
+  g.appendChild(poly(isoQuad(-88,-92,W+186,D+176,0),{fill:'#eef3ee',stroke:'#d3e0d7','stroke-width':1.6}));
+  g.appendChild(poly(isoQuad(-84,D+46,W+180,42,1),{fill:'#d7dde3',stroke:'#b7c0c8','stroke-width':1.2}));
+  g.appendChild(polyPath([iso(-74,D+67,2),iso(W+86,D+67,2)],{stroke:'#ffffff','stroke-width':2.2,'stroke-dasharray':'11 10',opacity:.95}));
+  g.appendChild(poly(isoQuad(W+18,-86,68,D+142,1),{fill:'#d7dde3',stroke:'#b7c0c8','stroke-width':1.2}));
+  g.appendChild(polyPath([iso(W+52,-76,2),iso(W+52,D+42,2)],{stroke:'#ffffff','stroke-width':2.2,'stroke-dasharray':'11 10',opacity:.95}));
+  g.appendChild(poly(isoQuad(-86,-24,38,D+76,1),{fill:'#e0e6ec',stroke:'#c2ccd4','stroke-width':1}));
+  g.appendChild(polyPath([iso(-67,-12,2),iso(-67,D+38,2)],{stroke:'#fff','stroke-width':1.6,'stroke-dasharray':'7 8',opacity:.9}));
+  g.appendChild(poly(isoQuad(-52,-70,58,38,1),{fill:'#dcefe4',stroke:'#bdd9c7','stroke-width':1}));
+  g.appendChild(poly(isoQuad(-58,36,44,70,1),{fill:'#e6f2dc',stroke:'#c8dcb9','stroke-width':1}));
+  g.appendChild(poly(isoQuad(W+2,D+10,52,40,1),{fill:'#f3f5f7',stroke:'#c6d0d8','stroke-width':1}));
+  [8,20,32,44].forEach(x=>g.appendChild(polyPath([iso(W+x,D+15,2),iso(W+x,D+45,2)],{stroke:'#c4ccd4','stroke-width':1})));
+  g.appendChild(poly(isoQuad(W-20,-78,42,28,1),{fill:'#f4efe4',stroke:'#d8cdb9','stroke-width':1}));
+  g.appendChild(poly(isoQuad(-28,D+95,68,26,1),{fill:'#f4efe4',stroke:'#d8cdb9','stroke-width':1}));
+  g.appendChild(svgEl('ellipse',{cx:iso(-36,D+24,2).x,cy:iso(-36,D+24,2).y,rx:18,ry:9,fill:'#bfe3f2',stroke:'#92c7dd','stroke-width':1}));
+  fitText(g,iso(W+28,D+33,3).x,iso(W+28,D+33,3).y,'Parking',{size:7,weight:700,fill:'#6b7884',strokeWidth:2});
+  fitText(g,iso(W+1,-62,3).x,iso(W+1,-62,3).y,'Office',{size:6.5,weight:700,fill:'#8a7350',strokeWidth:2});
+  fitText(g,iso(6,D+108,3).x,iso(6,D+108,3).y,'Shop',{size:6.5,weight:700,fill:'#8a7350',strokeWidth:2});
+  [-42,-26,-10,2].forEach((x,i)=>mapTree(g,x,-48+i*8,4));
+  [W+36,W+56,W+72].forEach((x,i)=>mapTree(g,x,22+i*32,4));
+  [18,42,66,92].forEach((x,i)=>mapTree(g,x,D+58+i*3,4));
+  [-52,-36,-20].forEach((x,i)=>mapTree(g,x,D+4+i*16,3.5));
   g.appendChild(polyPath([iso(W/2,-10,2),iso(W+18,-18,2),iso(W+42,-22,2)],{stroke:frontBlocked?'#c0392b':'#1e8449','stroke-width':3,'stroke-dasharray':'7 6','stroke-linecap':'round',opacity:.8}));
   g.appendChild(polyPath([iso(W/2,D+10,2),iso(W/2,D+42,2)],{stroke:backBlocked?'#c0392b':'#1e8449','stroke-width':3,'stroke-dasharray':'7 6','stroke-linecap':'round',opacity:.8}));
 }
