@@ -1486,7 +1486,17 @@ async function hazardAction(text){
     p=r.parsed;
   }
   busyOff();
-  if(!p || !p.target){ addChat('ai','ไม่เข้าใจการรายงานเหตุ — ลองแบบ "บันได B ชั้น 3 ไฟกั้น" หรือใช้ปุ่ม <b>🚨 รายงานเหตุ</b>'); return; }
+  if(!p || !p.target){
+    if(buildingId){
+      computeAndRender();
+      const dest=(window._routeCtx?.route||'จุดรวมพลที่ใกล้ที่สุด').split('·')[0].trim();
+      addChat('ai','🔥 รับทราบว่ามีเหตุไฟไหม้ แต่ยังไม่ทราบจุดที่กั้นชัดเจน — ให้ไปยัง <b>'+escapeHtml(dest)+'</b> ตามเมนู <b>🧭 เส้นทาง</b> ก่อน หากเห็นว่าบันได/ทางออกใดถูกกั้น ให้แจ้งเพิ่ม เช่น "บันได A ชั้น 2 ไฟกั้น"');
+      showRouteMenu();
+      return;
+    }
+    addChat('ai','🔥 รับทราบว่ามีเหตุไฟไหม้ — กรุณาบอกตำแหน่งของคุณก่อน เช่น "ชั้น 3 ห้องคอมพิวเตอร์" แล้วระบบจะพาไปจุดรวมพลที่ใกล้ที่สุด');
+    return;
+  }
   if(p.action==='clear'){
     const ok=await hzClearTarget(p.target);
     if(ok) addChat('ai','✅ ปลดเส้นทาง '+TARGET_LABEL[p.target]+' แล้ว — คำนวณเส้นทางใหม่ให้แล้ว');
