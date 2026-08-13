@@ -783,6 +783,29 @@ function stairCallout(g, key, target){
   fitText(g,box.x+box.w/2,box.y+23,label,{size:18,weight:700,fill:'#fff',stroke:'#ef3340',strokeWidth:.6});
 }
 
+function mapTree(g, x, y, r=5){
+  const p=iso(x,y,2);
+  g.appendChild(svgEl('circle',{cx:p.x,cy:p.y,r,fill:'#2e8b57',opacity:.9}));
+  g.appendChild(svgEl('line',{x1:p.x,y1:p.y+r-1,x2:p.x,y2:p.y+r+6,stroke:'#7b5e42','stroke-width':2,'stroke-linecap':'round'}));
+}
+
+function siteContext(g, W, D, frontBlocked, backBlocked){
+  g.appendChild(poly(isoQuad(-70,-82,W+150,D+158,0),{fill:'#eef7f0',stroke:'#cfe2d6','stroke-width':1.6}));
+  g.appendChild(poly(isoQuad(-54,D+48,W+130,34,1),{fill:'#d6dde3',stroke:'#b9c4cc','stroke-width':1.2}));
+  g.appendChild(polyPath([iso(-45,D+65,2),iso(W+64,D+65,2)],{stroke:'#ffffff','stroke-width':2,'stroke-dasharray':'10 10',opacity:.9}));
+  g.appendChild(poly(isoQuad(W+18,-72,58,D+112,1),{fill:'#d6dde3',stroke:'#b9c4cc','stroke-width':1.2}));
+  g.appendChild(polyPath([iso(W+47,-62,2),iso(W+47,D+28,2)],{stroke:'#ffffff','stroke-width':2,'stroke-dasharray':'10 10',opacity:.9}));
+  g.appendChild(poly(isoQuad(-46,-62,54,42,1),{fill:'#dcefe4',stroke:'#bdd9c7','stroke-width':1}));
+  g.appendChild(poly(isoQuad(-48,30,38,68,1),{fill:'#e8f3df',stroke:'#cbdcbc','stroke-width':1}));
+  g.appendChild(poly(isoQuad(W+1,D+13,44,34,1),{fill:'#f3f5f7',stroke:'#c6d0d8','stroke-width':1}));
+  fitText(g,iso(W+23,D+33,3).x,iso(W+23,D+33,3).y,'Parking',{size:7,weight:700,fill:'#6b7884',strokeWidth:2});
+  [-34,-18,-2].forEach((x,i)=>mapTree(g,x,-45+i*8,4));
+  [W+36,W+54,W+66].forEach((x,i)=>mapTree(g,x,30+i*30,4));
+  [18,42,66].forEach((x,i)=>mapTree(g,x,D+58+i*3,4));
+  g.appendChild(polyPath([iso(W/2,-10,2),iso(W+18,-18,2),iso(W+42,-22,2)],{stroke:frontBlocked?'#c0392b':'#1e8449','stroke-width':3,'stroke-dasharray':'7 6','stroke-linecap':'round',opacity:.8}));
+  g.appendChild(polyPath([iso(W/2,D+10,2),iso(W/2,D+42,2)],{stroke:backBlocked?'#c0392b':'#1e8449','stroke-width':3,'stroke-dasharray':'7 6','stroke-linecap':'round',opacity:.8}));
+}
+
 function isoQuad(x, y, w, h, z){
   return [iso(x,y,z), iso(x+w,y,z), iso(x+w,y+h,z), iso(x,y+h,z)];
 }
@@ -821,9 +844,7 @@ function floorSvg(f){
   const backBlocked=BLOCKED.has('EXIT:1:S');
 
   // site context around the building
-  g.appendChild(poly(isoQuad(-46,-62,W+92,D+124,0),{fill:'#f4f8f5',stroke:'#d7e5dc','stroke-width':1.5}));
-  g.appendChild(polyPath([iso(W/2,-10,2),iso(W+18,-18,2),iso(W+42,-22,2)],{stroke:frontBlocked?'#c0392b':'#1e8449','stroke-width':3,'stroke-dasharray':'7 6','stroke-linecap':'round',opacity:.8}));
-  g.appendChild(polyPath([iso(W/2,D+10,2),iso(W/2,D+42,2)],{stroke:backBlocked?'#c0392b':'#1e8449','stroke-width':3,'stroke-dasharray':'7 6','stroke-linecap':'round',opacity:.8}));
+  siteContext(g,W,D,frontBlocked,backBlocked);
   assemblyMarker(g,W+54,-22,'จุดรวมพล A','ประตูใหญ่',frontBlocked,-31);
   assemblyMarker(g,W/2,D+58,'จุดรวมพล B','ทางออกหลัง',backBlocked,40);
 
