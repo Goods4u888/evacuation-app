@@ -702,12 +702,35 @@ function fitText(g, x, y, text, attrs = {}){
     'stroke-width': attrs.strokeWidth || 2,
     'stroke-linejoin': 'round'
   }, text);
-  if(attrs.maxWidth){
-    e.setAttribute('textLength', attrs.maxWidth);
-    e.setAttribute('lengthAdjust', 'spacingAndGlyphs');
-  }
   g.appendChild(e);
   return e;
+}
+
+function mapRoomLabel(r){
+  const label = r.nameEn || r.name || '';
+  const match = label.match(/\b\d{3}\b/);
+  const roomNo = match ? match[0] : '';
+  let title = label.replace(/\b\d{3}\b/g,'').replace(/\s*\/\s*/g,' / ').trim();
+  const short = {
+    'Gymnasium':'Gym',
+    'Auditorium':'Auditorium',
+    'Electrical Room':'Electrical',
+    'Loading Bay / Back Exit':'Loading / Exit',
+    'Computer Lab':'Computer Lab',
+    'Faculty Office':'Faculty Office',
+    'Instrument Room':'Instrument',
+    'Manager Office':'Manager',
+    'Conference Room':'Conference',
+    'Executive Office':'Executive',
+    'Book Shelves':'Book Shelves',
+    'Reading Room':'Reading',
+    'Study Room':'Study',
+    'Media Room':'Media',
+    'Quiet Study':'Quiet Study',
+    'Rooftop Hall':'Rooftop Hall'
+  };
+  title = short[title] || title;
+  return { title, roomNo };
 }
 
 function assemblyMarker(g, x, y, label, blocked, labelDy){
@@ -717,7 +740,7 @@ function assemblyMarker(g, x, y, label, blocked, labelDy){
   g.appendChild(svgEl('circle',{cx:p.x,cy:p.y,r:26,fill,stroke:color,'stroke-width':2,opacity:.96}));
   g.appendChild(svgEl('circle',{cx:p.x,cy:p.y,r:8,fill:blocked?'#c0392b':'#1e8449'}));
   g.appendChild(svgEl('path',{d:`M${p.x-10},${p.y+12} Q${p.x},${p.y+1} ${p.x+10},${p.y+12}`,stroke:color,'stroke-width':2,fill:'none','stroke-linecap':'round'}));
-  fitText(g,p.x,p.y+labelDy,label,{size:11,weight:800,fill:color,maxWidth:92,strokeWidth:3});
+  fitText(g,p.x,p.y+labelDy,label,{size:11,weight:800,fill:color,strokeWidth:3});
 }
 
 function isoQuad(x, y, w, h, z){
@@ -777,7 +800,7 @@ function floorSvg(f){
 
   // floor label
   const lp=iso(W/2,-26,H+5);
-  fitText(g,lp.x,lp.y,`${f.label} · ${f.en}`,{size:13,weight:800,fill:'#4d6174',maxWidth:220,strokeWidth:3});
+  fitText(g,lp.x,lp.y,`${f.label} · ${f.en}`,{size:12,weight:800,fill:'#4d6174',strokeWidth:3});
 
   // corridor
   g.appendChild(poly(isoQuad(0,ISO.cy,W,ISO.ch,H),{fill:'#eef2f6',stroke:'#bcc9d6','stroke-width':1.5}));
@@ -838,10 +861,13 @@ function floorSvg(f){
     const dp=iso(dx,dy,H+1);
     g.appendChild(svgEl('circle',{cx:dp.x,cy:dp.y,r:3,fill:'#fff',stroke:'#7f8c8d','stroke-width':1.5}));
     // labels
+    const label=mapRoomLabel(r);
     const lpt=iso(rx+rw/2,ry+rh/2-4,H+1);
-    fitText(g,lpt.x,lpt.y,r.name,{size:8.5,weight:800,fill:'#1f3447',maxWidth:82,strokeWidth:2.4});
-    const ept=iso(rx+rw/2,ry+rh/2+7,H+1);
-    fitText(g,ept.x,ept.y,r.nameEn,{size:6.8,weight:600,fill:'#6f7f8d',maxWidth:76,strokeWidth:2});
+    fitText(g,lpt.x,lpt.y,label.title,{size:7.4,weight:800,fill:'#1f3447',strokeWidth:1.8});
+    if(label.roomNo){
+      const ept=iso(rx+rw/2,ry+rh/2+8,H+1);
+      fitText(g,ept.x,ept.y,label.roomNo,{size:7,weight:700,fill:'#6f7f8d',strokeWidth:1.7});
+    }
   }
 
   // refuge zones
