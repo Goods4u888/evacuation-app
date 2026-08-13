@@ -772,7 +772,13 @@ function stairCallout(g, key, target){
   const anchor = key==='SA'
     ? { x:box.x+box.w-10, y:box.y+box.h }
     : { x:box.x+10, y:box.y };
-  g.appendChild(svgEl('line',{x1:anchor.x,y1:anchor.y,x2:target.x,y2:target.y,stroke:'#ef3340','stroke-width':4,'stroke-linecap':'round'}));
+  const tip = key==='SA'
+    ? { x:target.x-15, y:target.y-12 }
+    : { x:target.x+16, y:target.y+16 };
+  const bend = key==='SA'
+    ? { x:anchor.x+10, y:anchor.y+8 }
+    : { x:anchor.x-10, y:anchor.y-8 };
+  g.appendChild(polyPath([anchor,bend,tip],{stroke:'#ef3340','stroke-width':3,'stroke-dasharray':'7 6','stroke-linecap':'round','stroke-linejoin':'round'}));
   g.appendChild(svgEl('rect',{x:box.x,y:box.y,width:box.w,height:box.h,rx:3,fill:'#ef3340'}));
   fitText(g,box.x+box.w/2,box.y+23,label,{size:18,weight:700,fill:'#fff',stroke:'#ef3340',strokeWidth:.6});
 }
