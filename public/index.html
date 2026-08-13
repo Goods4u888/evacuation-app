@@ -481,6 +481,7 @@ const ABILITYS = {
 let ability='normal';
 let hazards=[];          // {id, target, floors:'all'|[n], label}
 let hzBubble=1;
+let hazardsShared=false;
 
 const TARGET_LABEL = {
   stairA:'บันได A', stairB:'บันได B', corridor:'โถงทางเดินกลาง',
@@ -506,6 +507,46 @@ function computeBlocked(){
 }
 function refreshEdges(){ BLOCKED=computeBlocked(); EDGES=buildEdges(BLOCKED); renderHazardChips(); }
 
+function setHazards(next){
+  hazards = Array.isArray(next) ? next : [];
+  refreshEdges();
+  computeAndRender();
+}
+
+async function syncHazards(){
+  try{
+    const r=await fetch('/api/hazards');
+    if(!r.ok) throw new Error('hazards api unavailable');
+    const data=await r.json();
+    hazardsShared=true;
+    setHazards(data.hazards||[]);
+  }catch(_){
+    hazardsShared=false;
+    renderHazardChips();
+  }
+}
+
+async function saveHazard(hazard){
+  if(!hazardsShared) return false;
+  try{
+    const r=await fetch('/api/hazards',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(hazard)});
+    if(!r.ok) throw new Error('save failed');
+    await syncHazards();
+    return true;
+  }catch(_){ hazardsShared=false; return false; }
+}
+
+async function deleteHazards(params){
+  if(!hazardsShared) return false;
+  try{
+    const q=new URLSearchParams(params).toString();
+    const r=await fetch('/api/hazards?'+q,{method:'DELETE'});
+    if(!r.ok) throw new Error('delete failed');
+    await syncHazards();
+    return true;
+  }catch(_){ hazardsShared=false; return false; }
+}
+
 function renderHazardChips(){
   const bar=document.getElementById('hazardBar'); bar.innerHTML='';
   bar.appendChild(el('span',{class:'lab'},'เหตุที่รายงาน:'));
@@ -513,7 +554,7 @@ function renderHazardChips(){
   hazards.forEach(h=>{
     const chip=el('span',{class:'hk'}, `🔥 ${h.label}`);
     const x=el('button',{title:'ปลดเส้นทางนี้','aria-label':'clear'},'✕');
-    x.onclick=()=>{ hazards=hazards.filter(z=>z.id!==h.id); refreshEdges(); computeAndRender(); };
+    x.onclick=async()=>{ if(!(await deleteHazards({id:h.id}))){ hazards=hazards.filter(z=>z.id!==h.id); refreshEdges(); computeAndRender(); } };
     chip.appendChild(x);
     bar.appendChild(chip);
   });
@@ -1215,14 +1256,18 @@ function updateHzSummary(){
 function readHazardModal(){
   return { target:document.getElementById('hzTarget').value, floor: document.getElementById('hzFloor').value==='all'?'all':Number(document.getElementById('hzFloor').value) };
 }
-function hzAddFrom(target, floor){
+async function hzAddFrom(target, floor){
   const fl = (target==='exitFront'||target==='exitBack') ? 'all' : floor;
-  hazards.push({ id:'hz'+(hzBubble++), target, floors:fl, label: TARGET_LABEL[target]+(fl==='all'?' (ทั้งอาคาร)':' (ชั้น '+fl+')') });
-  refreshEdges(); computeAndRender();
+  const hazard={ id:'hz'+Date.now()+'-'+(hzBubble++), target, floors:fl, label: TARGET_LABEL[target]+(fl==='all'?' (ทั้งอาคาร)':' (ชั้น '+fl+')') };
+  if(!(await saveHazard(hazard))){
+    hazards.push(hazard);
+    refreshEdges(); computeAndRender();
+  }
   toast('🚨 กั้น '+TARGET_LABEL[target]+' — เส้นทางคำนวณใหม่แล้ว');
 }
-function hzClearTarget(target){
+async function hzClearTarget(target){
   const before=hazards.length;
+  if(await deleteHazards({target})) return before>0;
   hazards=hazards.filter(h=>h.target!==target);
   if(hazards.length<before){ refreshEdges(); computeAndRender(); toast('✅ ปลด '+TARGET_LABEL[target]); return true; }
   return false;
@@ -1426,13 +1471,13 @@ async function hazardAction(text){
   busyOff();
   if(!p || !p.target){ addChat('ai','ไม่เข้าใจการรายงานเหตุ — ลองแบบ "บันได B ชั้น 3 ไฟกั้น" หรือใช้ปุ่ม <b>🚨 รายงานเหตุ</b>'); return; }
   if(p.action==='clear'){
-    const ok=hzClearTarget(p.target);
+    const ok=await hzClearTarget(p.target);
     if(ok) addChat('ai','✅ ปลดเส้นทาง '+TARGET_LABEL[p.target]+' แล้ว — คำนวณเส้นทางใหม่ให้แล้ว');
     else addChat('ai','ไม่ได้มีการกั้น '+TARGET_LABEL[p.target]+' อยู่ก่อนหน้านี้');
     return;
   }
   const floor = p.allFloors? 'all' : (p.floor||'all');
-  hzAddFrom(p.target, floor);
+  await hzAddFrom(p.target, floor);
   addChat('ai','🚨 บันทึกเหตุ: <b>'+TARGET_LABEL[p.target]+'</b>'+(p.floor?(' ชั้น '+p.floor):'')+' ถูกกั้น — ระบบอ้อมให้อัตโนมัติจนกว่าจะปลด');
 }
 
@@ -1442,6 +1487,8 @@ async function hazardAction(text){
   cfgFloor=1;
   renderMap();
   renderHazardChips();
+  syncHazards();
+  setInterval(syncHazards,5000);
   document.getElementById('btnStart').addEventListener('click', openOverlay);
   document.getElementById('btnClose').addEventListener('click', closeOverlay);
   document.getElementById('btnReset').addEventListener('click', resetView);
@@ -1449,8 +1496,8 @@ async function hazardAction(text){
   document.getElementById('hzClose').addEventListener('click', closeHazardModal);
   document.getElementById('hzTarget').addEventListener('change', updateHzSummary);
   document.getElementById('hzFloor').addEventListener('change', updateHzSummary);
-  document.getElementById('hzBlock').addEventListener('click', ()=>{ const v=readHazardModal(); hzAddFrom(v.target, v.floor); closeHazardModal(); });
-  document.getElementById('hzClear').addEventListener('click', ()=>{ const v=readHazardModal(); const ok=hzClearTarget(v.target); closeHazardModal(); if(!ok) toast('ไม่มีเหตุที่ '+TARGET_LABEL[v.target]+' ที่จะปลด'); });
+  document.getElementById('hzBlock').addEventListener('click', async()=>{ const v=readHazardModal(); await hzAddFrom(v.target, v.floor); closeHazardModal(); });
+  document.getElementById('hzClear').addEventListener('click', async()=>{ const v=readHazardModal(); const ok=await hzClearTarget(v.target); closeHazardModal(); if(!ok) toast('ไม่มีเหตุที่ '+TARGET_LABEL[v.target]+' ที่จะปลด'); });
   document.getElementById('ability').addEventListener('change', (e)=>{ ability=e.target.value; if(ability==='wheelchair') toast('♿ โหมดวีลแชร์ — ระบบจะพาไปจุดหลบอัคคีและรอเจ้าหน้าที่'); computeAndRender(); });
   document.getElementById('tabRoute').addEventListener('click', ()=>switchTab('route'));
   document.getElementById('tabChat').addEventListener('click', ()=>switchTab('chat'));
