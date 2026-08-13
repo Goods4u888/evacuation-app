@@ -1406,8 +1406,10 @@ async function chatAction(text){
 
 function localFindRoom(text){
   const q=text.toLowerCase();
+  const floorHint=extractFloorHint(q);
+  const entries=floorHint ? allEntries().filter(e=>e.floor===floorHint) : allEntries();
   let best=null;
-  for(const e of allEntries()){
+  for(const e of entries){
     const hay=(e.label+' '+e.en+' '+e.id).toLowerCase();
     let score=0;
     const words=q.split(/[^a-z0-9ก-๙]+/).filter(w=>w.length>1);
@@ -1416,6 +1418,12 @@ function localFindRoom(text){
     if(score>0 && (!best||score>best.score)) best={e,score};
   }
   return best;
+}
+
+function extractFloorHint(text){
+  const m=String(text||'').match(/ชั้น\s*(\d)|floor\s*(\d)|f\s*(\d)/i);
+  const n=m?Number(m[1]||m[2]||m[3]):null;
+  return n>=1 && n<=5 ? n : null;
 }
 
 async function locateAction(text){
