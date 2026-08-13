@@ -1194,8 +1194,9 @@ function buildCtx(){
 }
 async function callAI(mode, message, context){
   const r=await fetch('/api/ai', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({mode, message, context:context||{}})});
-  if(!r.ok) throw new Error('server error');
-  return r.json();
+  const data=await r.json();
+  if(!r.ok) throw new Error(data.error||data.aiError||'server error');
+  return data;
 }
 let busy=null;
 function busyOn(){ busy={role:'busy',html:'🤖 AI กำลังคิด…'}; msgs.push(busy); renderChat(); }
@@ -1214,7 +1215,9 @@ async function sendChat(){
     else await chatAction(text);
   }catch(e){
     busyOff();
-    addChat('ai','⚠️ ติดต่อระบบ AI ไม่ได้ (ต้องรันผ่าน server /api/ai) — ใช้ช่องค้นหาหรือกดห้องบนแผนที่แทนได้');
+    const msg=String(e.message||'');
+    if(msg.includes('GEMINI_API_KEY')) addChat('ai','⚠️ ระบบ AI ยังไม่ได้ตั้งค่า API Key — ต้องเพิ่ม GEMINI_API_KEY ใน Vercel Settings > Environment Variables แล้ว Redeploy');
+    else addChat('ai','⚠️ ติดต่อระบบ AI ไม่ได้: '+escapeHtml(msg.slice(0,200))+' — ใช้ช่องค้นหาหรือกดห้องบนแผนที่แทนได้');
   }
 }
 
