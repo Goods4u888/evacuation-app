@@ -566,6 +566,7 @@ function hazardSummary(){
 
 /* ================= instructions ================= */
 function dirOf(pts){ const [a,b]=pts; if(Math.abs(a.x-b.x)<1) return null; return b.x>a.x ? 'ซ้าย' : 'ขวา'; }
+function flipDir(dir){ return dir==='ซ้าย' ? 'ขวา' : (dir==='ขวา' ? 'ซ้าย' : dir); }
 function roomNameAt(f,rid){ const r=roomById(f,rid); return r ? r.name + (r.nameEn?' ('+r.nameEn+')':'') : null; }
 
 function buildSteps(path){
@@ -574,7 +575,7 @@ function buildSteps(path){
   const dist=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y);
   const rof = nid=>{ const [k,,a]=nid.split(':'); return {k,a,floor:floorOf(nid)}; };
 
-  let walked=0, corridorDir=null;
+  let walked=0, corridorDir=null, approachSide=null;
   const flush=()=>{
     if(walked>0){
       const wm=Math.round(walked/PX2M);
@@ -618,6 +619,7 @@ function buildSteps(path){
       total+=10; continue;
     }
     if(A.k==='R' && B.k!=='R'){
+      approachSide=A.a && A.a.startsWith('s') ? 's' : 'n';
       steps.push({txt:`ออกจาก${roomNameAt(A.floor,A.a)} เข้าสู่โถงทางเดิน`,
                   sub:`เปิดประตูไปยังทางเดินหลัก ~3 ม.`, ok:true});
       total+=3; continue;
@@ -627,7 +629,8 @@ function buildSteps(path){
       continue;
     }
     if(A.k==='Cx' && B.k==='Cx'){
-      const dir=dirOf([pa,pb]);
+      const rawDir=dirOf([pa,pb]);
+      const dir=approachSide==='s' ? flipDir(rawDir) : rawDir;
       if(corridorDir && corridorDir===dir){ walked+=d; }
       else { flush(); corridorDir=dir; walked=d; }
       continue;
