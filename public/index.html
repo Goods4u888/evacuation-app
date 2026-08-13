@@ -787,7 +787,7 @@ function isoPtOf(nid){
   else if(k==='BACK'){ lx=ISO.bw/2; ly=ISO.bd+12; }
   else if(k==='EXIT'&&a==='N'){ lx=ISO.bw/2; ly=-30; }
   else if(k==='EXIT'&&a==='S'){ lx=ISO.bw/2; ly=ISO.bd+30; }
-  else if(k==='ASSY'&&a==='A'){ lx=ISO.bw/2; ly=-50; }
+  else if(k==='ASSY'&&a==='A'){ lx=ISO.bw+54; ly=-22; }
   else if(k==='ASSY'&&a==='B'){ lx=ISO.bw/2; ly=ISO.bd+50; }
   else { lx=0; ly=0; }
   return iso(lx, ly, H);
@@ -802,9 +802,9 @@ function floorSvg(f){
 
   // site context around the building
   g.appendChild(poly(isoQuad(-46,-62,W+92,D+124,0),{fill:'#f4f8f5',stroke:'#d7e5dc','stroke-width':1.5}));
-  g.appendChild(polyPath([iso(W/2,-42,2),iso(W/2,-10,2)],{stroke:frontBlocked?'#c0392b':'#1e8449','stroke-width':3,'stroke-dasharray':'7 6','stroke-linecap':'round',opacity:.8}));
+  g.appendChild(polyPath([iso(W/2,-10,2),iso(W+18,-18,2),iso(W+42,-22,2)],{stroke:frontBlocked?'#c0392b':'#1e8449','stroke-width':3,'stroke-dasharray':'7 6','stroke-linecap':'round',opacity:.8}));
   g.appendChild(polyPath([iso(W/2,D+10,2),iso(W/2,D+42,2)],{stroke:backBlocked?'#c0392b':'#1e8449','stroke-width':3,'stroke-dasharray':'7 6','stroke-linecap':'round',opacity:.8}));
-  assemblyMarker(g,W/2,-58,'จุดรวมพล A',frontBlocked,-31);
+  assemblyMarker(g,W+54,-22,'จุดรวมพล A',frontBlocked,-31);
   assemblyMarker(g,W/2,D+58,'จุดรวมพล B',backBlocked,40);
 
   // south wall (front face)
