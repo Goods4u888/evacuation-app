@@ -59,7 +59,7 @@ User: ${message}`;
   }
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
     const geminiRes = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
