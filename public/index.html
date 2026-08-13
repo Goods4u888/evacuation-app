@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ระบบนำทางอพยพ · Building Evacuation Guide</title>
+<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<style>
+  :root{
+    --red:#c0392b; --red-dk:#8e1f14; --green:#1e8449; --green-lt:#a9dfbf;
+    --blue:#2471a3; --blue-lt:#d6eaf8; --amber:#b9770e; --amber-lt:#fdebd0;
+    --gray:#5d6d7e; --border:#cfd8e3; --ink:#1b2838; --soft:#f4f7fb;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans Thai","Noto Sans",sans-serif;
+    color:var(--ink); background:var(--soft); display:flex; flex-direction:column;
+  }
+  header{
+    background:linear-gradient(120deg,var(--red),var(--red-dk)); color:#fff;
+    padding:10px 16px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  }
+  header .brand{font-size:17px;font-weight:700;letter-spacing:.2px}
+  header .brand small{display:block;font-weight:400;opacity:.85;font-size:12px}
+  header .hint{margin-left:auto;font-size:12px;background:rgba(255,255,255,.16);padding:5px 10px;border-radius:999px}
+  .toolbar{display:flex;gap:8px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center}
+  .search-wrap{position:relative;flex:1;min-width:230px;max-width:520px}
+  .search-wrap input{
+    width:100%; padding:10px 12px 10px 36px; border:1.5px solid var(--border); border-radius:10px;
+    font-size:14px; outline:none; transition:border .15s;
+  }
+  .search-wrap input:focus{border-color:var(--blue)}
+  .search-wrap .ico{position:absolute;left:11px;top:10px;color:var(--gray)}
+  .suggest{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--border);
+    border-radius:10px;box-shadow:0 8px 24px rgba(20,40,70,.14);max-height:300px;overflow:auto;z-index:50;display:none}
+  .suggest.open{display:block}
+  .suggest .grp{padding:6px 12px 2px;font-size:11px;color:var(--gray);letter-spacing:.4px;font-weight:700}
+  .suggest .it{padding:8px 14px;cursor:pointer;display:flex;gap:8px;align-items:center}
+  .suggest .it:hover,.suggest .it.hi{background:var(--blue-lt)}
+  .suggest .it .fl{font-size:11px;color:var(--blue);background:var(--blue-lt);padding:2px 6px;border-radius:6px;white-space:nowrap}
+  .btn{
+    border:0;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:700;cursor:pointer;
+    display:inline-flex;align-items:center;gap:8px;transition:transform .06s, opacity .15s;
+  }
+  .btn:active{transform:scale(.97)}
+  .btn.primary{background:var(--green);color:#fff}
+  .btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--border)}
+  .main{flex:1;display:flex;min-height:0}
+  .map-col{flex:1;min-width:0;display:flex;flex-direction:column;padding:12px}
+  .floors{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+  .floors button{
+    border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:6px 14px;cursor:pointer;
+    font-weight:700;font-size:13px;color:var(--gray);
+  }
+  .floors button.on{background:var(--blue);border-color:var(--blue);color:#fff}
+  .stage{flex:1;background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;min-height:380px;position:relative}
+  .stage svg{width:100%;height:100%;display:block}
+  .floor-legend{display:flex;gap:14px;margin-top:10px;font-size:12px;color:var(--gray);flex-wrap:wrap}
+  .floor-legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  .panel{width:400px;max-width:100%;border-left:1px solid var(--border);background:#fff;display:flex;flex-direction:column;overflow:hidden}
+  .panel-head{padding:14px 16px;background:var(--soft);border-bottom:1px solid var(--border)}
+  .panel-head h2{margin:0;font-size:15px;display:flex;align-items:center;gap:8px}
+  .panel-head .kick{font-size:12px;color:var(--gray);margin-top:3px}
+  .steps{flex:1;overflow:auto;padding:10px 16px}
+  .step{display:flex;gap:12px;padding:12px 0;border-bottom:1px dashed var(--border);position:relative}
+  .step:last-child{border-bottom:0}
+  .step .num{
+    width:26px;height:26px;border-radius:50%;background:var(--blue-lt);color:var(--blue);
+    font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px;
+  }
+  .step.done .num{background:var(--green);color:#fff}
+  .step .txt{font-size:14px;line-height:1.45}
+  .step .txt .sub{font-size:12px;color:var(--gray);margin-top:2px}
+  .step.warn{background:var(--amber-lt);border-radius:10px;margin:8px 0;padding:10px 12px;border-bottom:0}
+  .step.warn .num{background:var(--amber);color:#fff}
+  .panel-foot{padding:12px 16px;border-top:1px solid var(--border);background:var(--soft);font-size:12px;color:var(--gray)}
+  .summary{background:var(--green-lt);border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:14px}
+  .summary b{color:var(--green)}
+  .summary .row{display:flex;justify-content:space-between;margin-top:6px;font-size:13px}
+  .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700}
+  .badge.g{background:var(--green-lt);color:var(--green)}
+  .badge.r{background:#f5b7b1;color:var(--red-dk)}
+  .overlay{
+    position:fixed;inset:0;background:rgba(15,25,40,.55);z-index:100;display:none;
+    align-items:center;justify-content:center;padding:16px;
+  }
+  .overlay.open{display:flex}
+  .modal{background:#fff;border-radius:16px;max-width:560px;width:100%;padding:0;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+  .modal-head{background:linear-gradient(120deg,var(--red),var(--red-dk));color:#fff;padding:18px 22px}
+  .modal-head h1{margin:0 0 4px;font-size:19px;display:flex;gap:10px;align-items:center}
+  .modal-head p{margin:0;opacity:.9;font-size:13px}
+  .modal-body{padding:18px 22px;flex:1;overflow:auto}
+  .modal-body label{font-weight:800;font-size:13px;display:block;margin-bottom:6px}
+  .modal-body input{
+    width:100%;padding:13px 14px;border:2px solid var(--blue);border-radius:12px;font-size:15px;outline:none;
+  }
+  .room-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:14px;max-height:280px;overflow:auto;padding-right:2px}
+  .room-grid button{
+    border:1.5px solid var(--border);background:#fff;border-radius:10px;padding:8px 10px;text-align:left;cursor:pointer;
+    font-size:13px;line-height:1.3;transition:border .12s,background .12s;
+  }
+  .room-grid button:hover{border-color:var(--blue);background:var(--blue-lt)}
+  .room-grid button .fl{display:block;font-size:11px;color:var(--blue);font-weight:700;margin-top:2px}
+  .modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;background:var(--soft)}
+  .no-select{position:absolute;top:12px;left:12px;background:var(--blue);color:#fff;font-size:12px;
+    padding:6px 12px;border-radius:999px;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:5}
+  .btn.danger{background:var(--red);color:#fff}
+  .ability{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gray)}
+  .ability select{border:1.5px solid var(--border);border-radius:9px;padding:8px 8px;font-size:13px;background:#fff;color:var(--ink)}
+  .hazard-bar{display:flex;gap:8px;padding:0 16px 10px;flex-wrap:wrap;align-items:center}
+  .hazard-bar .lab{font-size:12px;color:var(--gray);font-weight:700}
+  .hk{display:inline-flex;align-items:center;gap:6px;background:#f5b7b1;border:1.5px solid var(--red);
+    color:var(--red-dk);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700}
+  .hk button{border:0;background:transparent;color:var(--red-dk);font-weight:900;cursor:pointer;padding:0 2px;font-size:13px}
+  .panel-tabs{display:flex;border-bottom:1px solid var(--border);background:#fff}
+  .ptab{flex:1;border:0;background:#fff;padding:11px 0;font-weight:700;font-size:13px;color:var(--gray);cursor:pointer}
+  .ptab.on{border-bottom:3px solid var(--blue);color:var(--blue)}
+  .chat{display:none;flex:1;flex-direction:column;min-height:0}
+  .chat.open{display:flex}
+  .chat-msgs{flex:1;overflow:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+  .msg{max-width:88%;padding:9px 12px;border-radius:12px;font-size:13.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+  .msg.me{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:3px}
+  .msg.ai{align-self:flex-start;background:#eef2f6;border:1px solid var(--border);border-bottom-left-radius:3px}
+  .msg.busy{color:#8a97a5;font-style:italic}
+  .msg .chip{display:inline-block;margin-top:8px}
+  .msg.me .chip button{background:rgba(255,255,255,.22)}
+  .chat-chips{display:flex;gap:6px;padding:8px 16px;flex-wrap:wrap;border-top:1px dashed var(--border)}
+  .chat-chips button{border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:6px 11px;font-size:12px;color:var(--ink);cursor:pointer}
+  .chat-chips button:hover{border-color:var(--blue);color:var(--blue)}
+  .chat-input{display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--border);background:#fff}
+  .chat-input input{flex:1;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;outline:none}
+  .chat-input input:focus{border-color:var(--blue)}
+  .rowbtns{display:flex;gap:8px}
+  .rowbtns button{flex:1}
+  .select-row{display:flex;gap:10px;margin-bottom:6px}
+  .select-row select{flex:1;border:1.5px solid var(--border);border-radius:10px;padding:11px;font-size:14px;background:#fff}
+  .hz-summary{font-size:12.5px;color:var(--red-dk);background:#fdecea;border:1px solid #f5b7b1;border-radius:10px;
+    padding:10px 12px;margin-top:12px;line-height:1.5}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1b2838;color:#fff;padding:11px 18px;
+    border-radius:12px;font-size:13px;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90%}
+  .toast.show{opacity:1}
+  .flag{font-size:12px;font-weight:700}
+  .flag.safe{color:var(--green)}
+  .flag.haz{color:var(--red-dk)}
+  @media (max-width:860px){
+    .main{flex-direction:column}
+    .panel{width:100%;border-left:0;border-top:1px solid var(--border);max-height:50vh}
+    .stage{min-height:300px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    ระบบนำทางอพยพอาคารตัวอย่าง
+    <small>Building Evacuation Guide · Demo Building (F1–F5)</small>
+  </div>
+  <div class="hint">🆘 เกิดเหตุฉุกเฉิน? บอกที่อยู่ของคุณ → ระบบแสดงเส้นทางไป "จุดปลอดภัย"</div>
+</header>
+
+<div class="toolbar">
+  <div class="search-wrap">
+    <span class="ico">🔍</span>
+    <input id="search" type="text" placeholder="คุณอยู่ที่ไหน? พิมพ์ชื่อห้อง เช่น Lobby / ห้องบรรยาย 202 / Lecture 201" autocomplete="off">
+    <div id="suggest" class="suggest"></div>
+  </div>
+  <button class="btn primary" id="btnStart">🆘 เริ่มนำทางอพยพ</button>
+  <button class="btn danger" id="btnReport">🚨 รายงานเหตุ</button>
+  <button class="btn ghost" id="btnReset">↺ รีเซ็ต</button>
+  <div class="ability">
+    <span>ผู้ใช้:</span>
+    <select id="ability">
+      <option value="normal">ปกติ</option>
+      <option value="senior">ผู้สูงอายุ</option>
+      <option value="child">เด็ก</option>
+      <option value="wheelchair">วีลแชร์</option>
+    </select>
+  </div>
+</div>
+<div class="hazard-bar" id="hazardBar"></div>
+
+<div class="main">
+  <div class="map-col">
+    <div class="floors" id="floors"></div>
+    <div class="stage"><div id="stage"></div></div>
+    <div class="floor-legend">
+      <span><i style="background:#f0b27a"></i>คุณอยู่ที่นี่</span>
+      <span><i style="background:var(--green)"></i>เส้นทางปลอดภัย</span>
+      <span><i style="background:#85c1e9"></i>บันไดหนีไฟ</span>
+      <span><i style="background:#f9e79f"></i>จุดหลบอัคคี (Refuge)</span>
+      <span><i style="background:var(--green-lt)"></i>จุดปลอดภัย / ทางออก</span>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-tabs">
+      <button class="ptab on" id="tabRoute" type="button">🧭 เส้นทาง</button>
+      <button class="ptab" id="tabChat" type="button">🤖 แชท AI</button>
+    </div>
+    <div class="panel-head">
+      <h2 id="panelTitle">🧭 แนะนำเส้นทางอพยพ</h2>
+      <div class="kick" id="panelKick">กด "เริ่มนำทางอพยพ" แล้วบอกห้องที่คุณอยู่ เพื่อให้ระบบหาเส้นทางไปจุดปลอดภัย</div>
+    </div>
+    <div class="steps" id="steps"></div>
+    <div class="chat" id="chatView">
+      <div class="chat-msgs" id="chatMsgs"></div>
+      <div class="chat-chips" id="chatChips"></div>
+      <div class="chat-input">
+        <input id="chatIn" placeholder="บอกเป็นประโยค เช่น 'ชั้น 2 ห้องคอมไฟ' หรือ 'บันได A กั้น'">
+        <button class="btn primary" id="chatSend">ส่ง</button>
+      </div>
+    </div>
+    <div class="panel-foot" id="panelFoot">⚠️ อย่าใช้ลิฟต์ในเหตุเพลิงไหม้ · เดินตามป้ายเขียว · ใจเย็น ไม่วิ่ง ไม่แย่งทาง</div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h1>🆘 เกิดเหตุฉุกเฉิน — คุณอยู่ที่ไหน?</h1>
+      <p>Emergency — Where are you right now?</p>
+    </div>
+    <div class="modal-body">
+      <label for="q">ค้นหาห้อง / ผู้คนที่อยู่ตรงจุดนั้น (พิมพ์ชื่อห้องภาษาอังกฤษหรือไทย)</label>
+      <input id="q" type="text" placeholder="พิมพ์เช่น 205 · Office 401 · Library · Server Room">
+      <div class="room-grid" id="roomGrid"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" id="btnClose">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="hazardOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h1>🚨 รายงานเหตุ / ปิดเส้นทาง</h1>
+      <p>Report a hazard — routes recalculate automatically around it</p>
+    </div>
+    <div class="modal-body">
+      <div class="select-row">
+        <div style="flex:1"><label for="hzTarget">ตำแหน่งเหตุ</label>
+          <select id="hzTarget">
+            <option value="stairA">บันได A (Stair A)</option>
+            <option value="stairB">บันได B (Stair B)</option>
+            <option value="corridor">โถงทางเดิน (ทางเดินกลาง)</option>
+            <option value="exitFront">ทางออกหน้า / จุดรวมพล A</option>
+            <option value="exitBack">ทางออกหลัง / จุดรวมพล B</option>
+          </select>
+        </div>
+        <div style="flex:1"><label for="hzFloor">ชั้น</label>
+          <select id="hzFloor">
+            <option value="all">ทั้งหมด / ทั้งอาคาร</option>
+            <option value="1">ชั้น 1</option>
+            <option value="2">ชั้น 2</option>
+            <option value="3">ชั้น 3</option>
+            <option value="4">ชั้น 4</option>
+            <option value="5">ชั้น 5</option>
+          </select>
+        </div>
+      </div>
+      <div class="rowbtns">
+        <button class="btn danger" id="hzBlock">🔥 กั้นเส้นทาง (Block)</button>
+        <button class="btn primary" id="hzClear">✅ ปลดเส้นทาง (Clear)</button>
+      </div>
+      <div id="hzSummary" class="hz-summary" style="display:none"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" id="hzClose">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ================= coordinates (SVG px) ================= */
+const CX0 = 150, CX1 = 880;          // corridor span x
+const COR_Y = 340;                   // corridor centerline y
+const PX2M  = 12;                    // px per metre (approx display scale)
+const FLOOR_W = 12;                  // stair climb weight per floor (m)
+
+const STAIRS = [
+  { key:'SA', label:'บันได A', labelEn:'Stair A', x:100, box:[52,170,104,276] },
+  { key:'SB', label:'บันได B', labelEn:'Stair B', x:910, box:[884,170,104,276] },
+];
+
+/* ================= floor plans ================= */
+const SLOT = { nx:[152,332,517,700], sx:[152,332,517,700], w:178, h:220, ny:80, sy:380, door:[241,423,606,789] };
+
+function mkRooms(cfg){
+  const out = [];
+  cfg.forEach(g => {
+    for(let i=0;i<4;i++){
+      const pos = g.side==='n' ? 0 : 1;
+      out.push({
+        id:g.side + (i+1),
+        name:g.names[i], nameEn:g.namesEn[i],
+        type:g.types ? g.types[i] : 'general',
+        x:g.side==='n' ? SLOT.nx[i] : SLOT.sx[i],
+        y:g.side==='n' ? SLOT.ny : SLOT.sy,
+        w:SLOT.w, h:SLOT.h,
+        door:SLOT.door[i]
+      });
+    }
+  });
+  return out;
+}
+
+const FLOORS = [
+  {
+    n:1, label:'ชั้น 1', en:'Ground floor', isGround:true,
+    rooms: mkRooms([
+      { side:'n', names:['ห้องอาหาร','ล็อบบี้','โรงยิม','หอประชุม'], namesEn:['Cafeteria','Lobby','Gymnasium','Auditorium'],
+        types:['wellness','lobby',null,'hall'] },
+      { side:'s', names:['ห้องรักษาความปลอดภัย','ห้องเก็บของ','ห้องไฟฟ้า','ห้องโหลดสินค้า / ทางออกหลัง'],
+        namesEn:['Security','Storage','Electrical Room','Loading Bay / Back Exit'],
+        types:['service','service','service','exit_rec'] },
+    ]),
+  },
+  {
+    n:2, label:'ชั้น 2', en:'Classrooms',
+    rooms: mkRooms([
+      { side:'n', names:['ห้องบรรยาย 201','ห้องบรรยาย 202','ห้องเรียน 203','ห้องเรียน 204'],
+        namesEn:['Lecture 201','Lecture 202','Classroom 203','Classroom 204'] },
+      { side:'s', names:['ห้องเรียน 205','ห้องเรียน 206','ห้องคอมพิวเตอร์ 207','สำนักงานอาจารย์'],
+        namesEn:['Classroom 205','Classroom 206','Computer Lab 207','Faculty Office'],
+        types:[null,null,'lab','office'] },
+    ]),
+  },
+  {
+    n:3, label:'ชั้น 3', en:'Laboratories',
+    rooms: mkRooms([
+      { side:'n', names:['ห้องปฏิบัติการชีวะ 301','ห้องปฏิบัติการเคมี 302','ห้องปฏิบัติการฟิสิกส์ 303','ห้องคอมพิวเตอร์ 304'],
+        namesEn:['Biology Lab 301','Chemistry Lab 302','Physics Lab 303','Computer Lab 304'],
+        types:['lab','lab','lab','lab'] },
+      { side:'s', names:['ห้องเตรียมตัวอย่าง 305','ห้องเครื่องมือ 306','ห้องมืด 307','ห้องเซิร์ฟเวอร์ 308'],
+        namesEn:['Lab Prep 305','Instrument Room 306','Darkroom 307','Server Room 308'],
+        types:['lab',null,null,'service'] },
+    ]),
+  },
+  {
+    n:4, label:'ชั้น 4', en:'Offices & Meeting rooms',
+    rooms: mkRooms([
+      { side:'n', names:['สำนักงาน 401','สำนักงาน 402','สำนักงานผู้จัดการ','ห้องประชุมใหญ่ 404'],
+        namesEn:['Office 401','Office 402','Manager Office','Conference Room 404'],
+        types:['office','office','office','hall'] },
+      { side:'s', names:['ห้องประชุม 405','ห้องประชุม 406','สำนักงานผู้บริหาร','ห้องเอกสาร 408'],
+        namesEn:['Meeting Room 405','Meeting Room 406','Executive Office','Archive 408'],
+        types:['office','office','office','service'] },
+    ]),
+  },
+  {
+    n:5, label:'ชั้น 5', en:'Library & Rooftop',
+    rooms: mkRooms([
+      { side:'n', names:['ห้องอ่านหนังสือ 501','ชั้นหนังสือ 502','ห้องศึกษาส่วนตัว 503','ห้องสมุด 504'],
+        namesEn:['Reading Room 501','Book Shelves 502','Study Room 503','Library 504'],
+        types:['general','general','general','general'] },
+      { side:'s', names:['ห้องจดหมายเหตุ 505','ห้องสื่อ 506','ห้องอ่านเงียบ 507','ห้องอเนกประสงค์ 508'],
+        namesEn:['Archive 505','Media Room 506','Quiet Study 507','Rooftop Hall 508'],
+        types:['general','general','general','hall'] },
+    ]),
+  },
+];
+
+/* ================= graph construction ================= */
+const CORR_X = [162,241,320,423,520,606,700,789,874];
+
+function nodeId(floor, kind, extra){ return kind + ':' + floor + (extra!==undefined ? ':' + extra : ''); }
+
+const RID = (f,rid)=> nodeId(f,'R',rid);
+const CORR_ID = (f,x)=> nodeId(f,'Cx',x);
+const SA_ID = f=> nodeId(f,'SA');
+const SB_ID = f=> nodeId(f,'SB');
+
+function roomById(f,id){ return FLOORS[f-1].rooms.find(r=>r.id===id); }
+
+function ptOf(nid){
+  const [k,f,a] = [nid.split(':')[0], Number(nid.split(':')[1]), nid.split(':')[2]];
+  if(k==='Cx' || k==='R'){ if(k==='R'){ const r=roomById(f,a); return {x:r.door,y:COR_Y}; } return {x:Number(a),y:COR_Y}; }
+  if(k==='SA') return {x:100,y:COR_Y};
+  if(k==='SB') return {x:910,y:COR_Y};
+  if(k==='EXIT' && a==='N') return {x:423,y:60};
+  if(k==='FRONT') return {x:423,y:96};
+  if(k==='EXIT' && a==='S') return {x:789,y:640};
+  if(k==='BACK')  return {x:789,y:590};
+  if(k==='ASSY' && a==='A') return {x:423,y:20};
+  if(k==='ASSY' && a==='B') return {x:789,y:684};
+  return {x:0,y:0};
+}
+function floorOf(nid){ return Number(nid.split(':')[1]); }
+
+function buildEdges(blockSet){
+  const banned=blockSet||new Set();
+  const edges = new Map(); // nid -> [[nid2, w]]
+  const add=(a,b,w)=>{
+    if(banned.has(a)||banned.has(b)) return;
+    if(!edges.has(a))edges.set(a,[]); if(!edges.has(b))edges.set(b,[]);
+    edges.get(a).push([b,w]); edges.get(b).push([a,w]);
+  };
+
+  for(const fl of FLOORS){
+    const f=fl.n;
+    for(let i=0;i<CORR_X.length-1;i++){
+      const w=Math.abs(CORR_X[i+1]-CORR_X[i])/PX2M;
+      add(CORR_ID(f,CORR_X[i]), CORR_ID(f,CORR_X[i+1]), w);
+    }
+    for(const r of fl.rooms) add(RID(f,r.id), CORR_ID(f,r.door), 3);
+    add(SA_ID(f), CORR_ID(f,162), 4);
+    add(SB_ID(f), CORR_ID(f,874), 4);
+  }
+  // vertical stair links
+  for(const s of STAIRS){
+    for(let f=FLOORS.length; f>1; f--){
+      const idA = s.key==='SA'? SA_ID(f) : SB_ID(f);
+      const idB = s.key==='SA'? SA_ID(f-1) : SB_ID(f-1);
+      add(idA, idB, FLOOR_W);
+    }
+  }
+  // ground exit links
+  add(RID(1,'n2'), 'FRONT:1', 10);        // across lobby
+  add('FRONT:1','EXIT:1:N', 4);
+  add('EXIT:1:N','ASSY:1:A', 6);
+  add(RID(1,'s4'), 'BACK:1', 10);          // across loading bay
+  add('BACK:1','EXIT:1:S', 4);
+  add('EXIT:1:S','ASSY:1:B', 6);
+  return edges;
+}
+
+function dijkstra(edges, start, targets){
+  const dist=new Map(), prev=new Map();
+  const pq=[[0,start]]; dist.set(start,0);
+  const tset=new Set(targets);
+  while(pq.length){
+    pq.sort((a,b)=>a[0]-b[0]);
+    const [d,u]=pq.shift();
+    if(tset.has(u)) return {node:u, dist:d, prev};
+    if(d!==dist.get(u)) continue;
+    for(const [v,w] of (edges.get(u)||[])){
+      const nd=d+w;
+      if(nd < (dist.get(v)??Infinity)){ dist.set(v,nd); prev.set(v,[u,w]); pq.push([nd,v]); }
+    }
+  }
+  return null;
+}
+function reconstruct(prev, end){
+  const path=[]; let u=end;
+  while(u!==undefined){ path.unshift(u); const p=prev.get(u); u = p?p[0] : undefined; }
+  return path;
+}
+
+/* ================= personalisation + hazards ================= */
+const ABILITYS = {
+  normal:    { label:'ปกติ',        speed:1.2 },
+  senior:    { label:'ผู้สูงอายุ',  speed:0.7 },
+  child:     { label:'เด็ก',        speed:0.85 },
+  wheelchair:{ label:'วีลแชร์',    speed:0.7 },
+};
+let ability='normal';
+let hazards=[];          // {id, target, floors:'all'|[n], label}
+let hzBubble=1;
+
+const TARGET_LABEL = {
+  stairA:'บันได A', stairB:'บันได B', corridor:'โถงทางเดินกลาง',
+  exitFront:'ทางออกหน้า / จุดรวมพล A', exitBack:'ทางออกหลัง / จุดรวมพล B',
+};
+
+function computeBlocked(){
+  const set=new Set();
+  for(const hz of hazards){
+    const floors = hz.floors==='all' ? FLOORS.map(f=>f.n) : hz.floors;
+    if(hz.target==='stairA'||hz.target==='stairB'){
+      const key=hz.target==='stairA'?'SA':'SB';
+      floors.forEach(f=>set.add(key+':'+f));
+    } else if(hz.target==='exitFront'){
+      set.add('FRONT:1'); set.add('EXIT:1:N'); set.add('ASSY:1:A');
+    } else if(hz.target==='exitBack'){
+      set.add('BACK:1'); set.add('EXIT:1:S'); set.add('ASSY:1:B');
+    } else if(hz.target==='corridor'){
+      floors.forEach(f=>[320,423,520].forEach(x=>set.add('Cx:'+f+':'+x)));
+    }
+  }
+  return set;
+}
+function refreshEdges(){ BLOCKED=computeBlocked(); EDGES=buildEdges(BLOCKED); renderHazardChips(); }
+
+function renderHazardChips(){
+  const bar=document.getElementById('hazardBar'); bar.innerHTML='';
+  bar.appendChild(el('span',{class:'lab'},'เหตุที่รายงาน:'));
+  if(!hazards.length){ bar.appendChild(el('span',{style:'color:#8a97a5;font-size:12px'},'ไม่มี — ทุกทางเปิดใช้')); return; }
+  hazards.forEach(h=>{
+    const chip=el('span',{class:'hk'}, `🔥 ${h.label}`);
+    const x=el('button',{title:'ปลดเส้นทางนี้','aria-label':'clear'},'✕');
+    x.onclick=()=>{ hazards=hazards.filter(z=>z.id!==h.id); refreshEdges(); computeAndRender(); };
+    chip.appendChild(x);
+    bar.appendChild(chip);
+  });
+}
+
+function hazardSummary(){
+  return hazards.map(h=>`🔥 ${h.label}`).join('\n') || 'ไม่มีรายงานเหตุ';
+}
+
+/* ================= instructions ================= */
+function dirOf(pts){ const [a,b]=pts; if(Math.abs(a.x-b.x)<1) return null; return b.x>a.x ? 'ขวา' : 'ซ้าย'; }
+function roomNameAt(f,rid){ const r=roomById(f,rid); return r ? r.name + (r.nameEn?' ('+r.nameEn+')':'') : null; }
+
+function buildSteps(path){
+  const steps=[]; let total=0;
+  const pt = i=> ptOf(path[i]);
+  const dist=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y);
+  const rof = nid=>{ const [k,,a]=nid.split(':'); return {k,a,floor:floorOf(nid)}; };
+
+  let walked=0, corridorDir=null;
+  const flush=()=>{
+    if(walked>0){
+      const wm=Math.round(walked/PX2M);
+      steps.push({txt:`เดินตามโถงทางเดินไปทาง${corridorDir==='ขวา'?'ขวา':'ซ้าย'} ~${wm} เมตร`,
+                  sub:`ตามทางเดินหลัก · มุ่งไปทาง${corridorDir==='ขวา'?'จุดรวมพล/ทางออก':'บันได'}`,
+                  ok:true});
+      total+=wm; walked=0; corridorDir=null;
+    }
+  };
+
+  for(let i=0;i<path.length-1;i++){
+    const A=rof(path[i]), B=rof(path[i+1]);
+    const pa=pt(i), pb=pt(i+1);
+    const d=dist(pa,pb);
+    const sA=STAIRS.find(s=>s.key===A.k), sB=STAIRS.find(s=>s.key===B.k);
+
+    if(A.floor!==B.floor){
+      // vertical descent/ascent via a stair
+      flush();
+      const st = sA || sB;
+      const up = B.floor > A.floor;
+      steps.push({
+        txt:`ใช้${st?st.label:''} ${up?'ขึ้น':'ลง'}หนึ่งชั้น ไปยัง${FLOORS[B.floor-1].label} (${FLOORS[B.floor-1].en})`,
+        sub:`บันไดหนีไฟ · เดินชิดขวา ราวจับทั้งสองข้าง ~${FLOOR_W} ม.`,
+        ok:true,
+      });
+      total += FLOOR_W;
+      continue;
+    }
+
+    if((A.k==='R' || B.k==='R') && walked>0){ flush(); }
+
+    // leaving the lobby towards the main door
+    if(A.k==='R' && B.k==='FRONT'){
+      steps.push({txt:'เดินข้ามล็อบบี้ มุ่งหน้าประตูทางเข้าหลัก', sub:'~10 ม. · ตามป้ายหนีไฟ', ok:true});
+      total+=10; continue;
+    }
+    // through the loading bay towards the back exit
+    if(A.k==='R' && B.k==='BACK'){
+      steps.push({txt:'เดินผ่านห้องโหลดสินค้า มุ่งหน้าประตูทางออกหลัง', sub:'~10 ม. · ตามป้ายหนีไฟ', ok:true});
+      total+=10; continue;
+    }
+    if(A.k==='R' && B.k!=='R'){
+      steps.push({txt:`ออกจาก${roomNameAt(A.floor,A.a)} เข้าสู่โถงทางเดิน`,
+                  sub:`เปิดประตูไปยังทางเดินหลัก ~3 ม.`, ok:true});
+      total+=3; continue;
+    }
+    if(A.k==='Cx' && B.k==='R'){
+      steps.push({txt:`เข้าสู่${roomNameAt(B.floor,B.a)}`, ok:true});
+      continue;
+    }
+    if(A.k==='Cx' && B.k==='Cx'){
+      const dir=dirOf([pa,pb]);
+      if(corridorDir && corridorDir===dir){ walked+=d; }
+      else { flush(); corridorDir=dir; walked=d; }
+      continue;
+    }
+    if(B.k==='SA'||B.k==='SB'){
+      if(walked>0){ flush(); }
+      const st = sB;
+      steps.push({txt:`เข้าสู่${st.label} (${st.labelEn})`,
+                  sub:`ประตูหนีไฟอยู่ติดโถงทางเดิน ~4 ม.`, ok:true});
+      total+=4; continue;
+    }
+    if(A.k==='SA'||A.k==='SB'){
+      if(walked>0){ flush(); }
+      const st = sA;
+      steps.push({txt:`ออกจาก${st.label} (${st.labelEn}) เข้าสู่โถงทางเดิน`, ok:true});
+      total+=4; continue;
+    }
+    if(B.k==='FRONT'){
+      if(walked>0) flush();
+      steps.push({txt:'เดินผ่านล็อบบี้ มุ่งหน้าประตูทางเข้าหลัก', sub:'~10 ม.', ok:true});
+      total+=10; continue;
+    }
+    if(B.k==='EXIT' && B.a==='N'){
+      steps.push({txt:'ออกจากอาคารทางประตูทางเข้าหลัก', sub:'ประตูเลื่อน/ประตูกระจก ~4 ม.', ok:true});
+      total+=4; continue;
+    }
+    if(B.k==='ASSY' && B.a==='A'){
+      steps.push({txt:'🚩 ถึงจุดรวมพล A (หน้าอาคาร) — เขตปลอดภัยแล้ว', sub:'ถอยห่างจากตัวอาคาร ≥50 ม. · รอการนับจำนวน', ok:true});
+      total+=6; continue;
+    }
+    if(B.k==='BACK'){
+      if(walked>0) flush();
+      steps.push({txt:'ผ่านห้องโหลดสินค้า มุ่งหน้าประตูทางออกหลัง', sub:'~10 ม.', ok:true});
+      total+=10; continue;
+    }
+    if(B.k==='EXIT' && B.a==='S'){
+      steps.push({txt:'ออกจากอาคารทาง "ทางออกหลัง"', sub:'ประตูหนีไฟ ~4 ม.', ok:true});
+      total+=4; continue;
+    }
+    if(B.k==='ASSY' && B.a==='B'){
+      steps.push({txt:'🚩 ถึงจุดรวมพล B (หลังอาคาร) — เขตปลอดภัยแล้ว', sub:'ถอยห่างจากตัวอาคาร ≥50 ม. · รอการนับจำนวน', ok:true});
+      total+=6; continue;
+    }
+    // fallback
+    steps.push({txt:`เคลื่อนที่ต่อ (${A.k}→${B.k}) ~${Math.round(d/PX2M)} ม.`, ok:true}); total+=d/PX2M;
+  }
+  if(walked>0) flush();
+  return {steps, total};
+}
+
+/* ================= render ================= */
+const TYPE_COLORS = { lobby:'#fdebd0', service:'#e8eaed', exit_rec:'#d5f5e3',
+  wellness:'#fdebd0', hall:'#fdebd0', lab:'#eaf2fb', office:'#eaf2fb', general:'#f8fbff' };
+
+let EDGES;
+let BLOCKED=new Set();
+let buildingId = null;   // e.g. 'R:3:n2'
+
+function el(tag, attrs, html){ const e=document.createElement(tag);
+  for(const k in attrs) e.setAttribute(k,attrs[k]);
+  if(html!==undefined) e.innerHTML=html;
+  return e; }
+
+function svgEl(tag, attrs, text){
+  const e=document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  if(text!==undefined) e.textContent=text;
+  return e;
+}
+
+/* ================= isometric projection ================= */
+const ISO_ANGLE = Math.PI / 6;      // 30°
+const COS30 = Math.cos(ISO_ANGLE);  // 0.866
+const SIN30 = Math.sin(ISO_ANGLE);  // 0.5
+const EXTRUDE_H = 48;               // wall height (px)
+const FLOOR_H = 60;                 // vertical spacing between floors
+const ISO_ORIGIN_X = 500;           // center X in SVG
+const ISO_ORIGIN_Y = 180;           // top Y in SVG
+
+/* ================= isometric building model ================= */
+const ISO = {
+  bw: 280, bd: 180, wh: 45,
+  rx: [8, 78, 148, 218], rw: 55,
+  ny: 8,  nh: 58,
+  sy: 114, sh: 58,
+  cy: 66, ch: 48,
+  sa: { x:-12, y:66, w:28, h:48 },
+  sb: { x:264, y:66, w:28, h:48 },
+  elv: { x:125, y:72, w:30, h:36 },
+};
+
+function iso(x, y, z = 0){
+  // x,y in logical coords (0-1000), z in px
+  const ix = (x - y) * COS30;
+  const iy = (x + y) * SIN30 - z;
+  return { x: ISO_ORIGIN_X + ix, y: ISO_ORIGIN_Y + iy };
+}
+function isoPt(pt){ return iso(pt.x, pt.y, pt.z || 0); }
+
+function isoRect(x, y, w, h, z, hgt){
+  // returns polygon points for extruded rect (top + sides)
+  const c = [
+    iso(x, y, z + hgt), iso(x + w, y, z + hgt),
+    iso(x + w, y + h, z + hgt), iso(x, y + h, z + hgt)
+  ];
+  const b = [
+    iso(x, y, z), iso(x + w, y, z),
+    iso(x + w, y + h, z), iso(x, y + h, z)
+  ];
+  return { top: c, left: [b[0], b[3], c[3], c[0]], right: [b[1], b[2], c[2], c[1]] };
+}
+function poly(points, attrs){
+  return svgEl('polygon', { points: points.map(p=>`${p.x},${p.y}`).join(' '), ...attrs });
+}
+function polyPath(points, attrs){
+  return svgEl('polyline', { points: points.map(p=>`${p.x},${p.y}`).join(' '), fill:'none', ...attrs });
+}
+function isoText(x, y, z, attrs, text){
+  const p = iso(x, y, z);
+  return svgEl('text', { x: p.x, y: p.y, 'text-anchor': attrs?.anchor || 'middle', 'font-size': attrs?.size || 12, fill: attrs?.fill || '#2c3e50', 'font-weight': attrs?.weight || '400' }, text);
+}
+
+function isoQuad(x, y, w, h, z){
+  return [iso(x,y,z), iso(x+w,y,z), iso(x+w,y+h,z), iso(x,y+h,z)];
+}
+
+function isoPtOf(nid){
+  const [k,f,a] = [nid.split(':')[0], Number(nid.split(':')[1]), nid.split(':')[2]];
+  const H = ISO.wh;
+  let lx, ly;
+  if(k==='Cx'){
+    const x2d=Number(a);
+    lx=(x2d-150)/(880-150)*ISO.bw;
+    ly=ISO.cy+ISO.ch/2;
+  } else if(k==='R'){
+    const r=roomById(f,a); if(!r) return iso(0,0,H);
+    const isN=r.id.startsWith('n');
+    const col=parseInt(r.id.slice(1))-1;
+    lx=ISO.rx[col]+ISO.rw/2;
+    ly=isN?(ISO.ny+ISO.nh/2):(ISO.sy+ISO.sh/2);
+  } else if(k==='SA'){ lx=ISO.sa.x+ISO.sa.w/2; ly=ISO.cy+ISO.ch/2; }
+  else if(k==='SB'){ lx=ISO.sb.x+ISO.sb.w/2; ly=ISO.cy+ISO.ch/2; }
+  else if(k==='FRONT'){ lx=ISO.bw/2; ly=-12; }
+  else if(k==='BACK'){ lx=ISO.bw/2; ly=ISO.bd+12; }
+  else if(k==='EXIT'&&a==='N'){ lx=ISO.bw/2; ly=-30; }
+  else if(k==='EXIT'&&a==='S'){ lx=ISO.bw/2; ly=ISO.bd+30; }
+  else if(k==='ASSY'&&a==='A'){ lx=ISO.bw/2; ly=-50; }
+  else if(k==='ASSY'&&a==='B'){ lx=ISO.bw/2; ly=ISO.bd+50; }
+  else { lx=0; ly=0; }
+  return iso(lx, ly, H);
+}
+
+function floorSvg(f){
+  const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.dataset.floor = f.n;
+  const W=ISO.bw, D=ISO.bd, H=ISO.wh;
+
+  // south wall (front face)
+  g.appendChild(poly([iso(0,D,0),iso(W,D,0),iso(W,D,H),iso(0,D,H)],{fill:'#d5d8dc',stroke:'#9aa7b4','stroke-width':2}));
+  // east wall (right face)
+  g.appendChild(poly([iso(W,0,0),iso(W,D,0),iso(W,D,H),iso(W,0,H)],{fill:'#bfc9ca',stroke:'#9aa7b4','stroke-width':2}));
+  // north wall (back, semi-transparent)
+  g.appendChild(poly([iso(0,0,0),iso(W,0,0),iso(W,0,H),iso(0,0,H)],{fill:'#eaeded',stroke:'#9aa7b4','stroke-width':1.5,opacity:.4}));
+  // west wall (left, semi-transparent)
+  g.appendChild(poly([iso(0,0,0),iso(0,D,0),iso(0,D,H),iso(0,0,H)],{fill:'#e5e8e8',stroke:'#9aa7b4','stroke-width':1.5,opacity:.4}));
+  // floor surface (top)
+  g.appendChild(poly(isoQuad(0,0,W,D,H),{fill:'#fbfcfe',stroke:'#9aa7b4','stroke-width':2.5}));
+
+  // floor label
+  const lp=iso(W/2,-20,H+5);
+  g.appendChild(svgEl('text',{x:lp.x,y:lp.y,'text-anchor':'middle','font-size':16,'font-weight':800,fill:'#5d6d7e'},`${f.label} · ${f.en}`));
+
+  // corridor
+  g.appendChild(poly(isoQuad(0,ISO.cy,W,ISO.ch,H),{fill:'#eef2f6',stroke:'#bcc9d6','stroke-width':1.5}));
+  const cp=iso(W/2,ISO.cy+ISO.ch/2,H+2);
+  g.appendChild(svgEl('text',{x:cp.x,y:cp.y,'text-anchor':'middle','font-size':11,fill:'#8a97a5'},'โถงทางเดินหลัก · Main Corridor'));
+
+  // stairs
+  STAIRS.forEach(s=>{
+    const blocked=BLOCKED.has(s.key+':'+f.n);
+    const m=s.key==='SA'?ISO.sa:ISO.sb;
+    const fill=blocked?'#f5b7b1':'#d6eaf8';
+    const stroke=blocked?'#922b21':'#2471a3';
+    // top
+    g.appendChild(poly(isoQuad(m.x,m.y,m.w,m.h,H),{fill,stroke,'stroke-width':blocked?3:2}));
+    // left side
+    g.appendChild(poly([iso(m.x,m.y,0),iso(m.x,m.y+m.h,0),iso(m.x,m.y+m.h,H),iso(m.x,m.y,H)],{fill:blocked?'#e6b0aa':'#aed6f1',stroke,'stroke-width':1.5}));
+    // front side
+    g.appendChild(poly([iso(m.x,m.y+m.h,0),iso(m.x+m.w,m.y+m.h,0),iso(m.x+m.w,m.y+m.h,H),iso(m.x,m.y+m.h,H)],{fill:blocked?'#f5b7b1':'#d6eaf8',stroke,'stroke-width':1.5}));
+    const cx=m.x+m.w/2, cy=m.y+m.h/2;
+    if(blocked){
+      g.appendChild(polyPath([iso(cx-8,cy-8,H+1),iso(cx+8,cy+8,H+1)],{stroke:'#922b21','stroke-width':4}));
+      g.appendChild(polyPath([iso(cx+8,cy-8,H+1),iso(cx-8,cy+8,H+1)],{stroke:'#922b21','stroke-width':4}));
+      const bl=iso(cx,cy-12,H+4);
+      g.appendChild(svgEl('text',{x:bl.x,y:bl.y,'text-anchor':'middle','font-size':9,'font-weight':800,fill:'#922b21'},'ไฟกั้น'));
+    } else {
+      let d='';
+      for(let i=0;i<5;i++){
+        const py=m.y+5+i*8;
+        const a=iso(cx-8,py,H+1),b=iso(cx,py-4,H+1),c=iso(cx+8,py,H+1);
+        d+=`M${a.x},${a.y} L${b.x},${b.y} L${c.x},${c.y} `;
+      }
+      g.appendChild(svgEl('path',{d,stroke:'#2471a3','stroke-width':2,fill:'none',opacity:.7}));
+    }
+    const sl=iso(cx,m.y-8,H+2);
+    const tr=g.appendChild(svgEl('text',{x:sl.x,y:sl.y,'text-anchor':'middle','font-size':12,'font-weight':800,fill:'#1b4f72'},s.label));
+    tr.appendChild(svgEl('tspan',{x:sl.x,dy:14,'font-size':9},s.labelEn));
+  });
+
+  // elevator
+  g.appendChild(poly(isoQuad(ISO.elv.x,ISO.elv.y,ISO.elv.w,ISO.elv.h,H),{fill:'#fdf2e9',stroke:'#b9770e','stroke-width':2}));
+  const ev=iso(ISO.elv.x+ISO.elv.w/2,ISO.elv.y+ISO.elv.h/2,H+2);
+  g.appendChild(svgEl('text',{x:ev.x,y:ev.y,'text-anchor':'middle','font-size':9,'font-weight':800,fill:'#b9770e'},'ELV'));
+  g.appendChild(svgEl('text',{x:ev.x,y:ev.y+11,'text-anchor':'middle','font-size':8,fill:'#b9770e'},'ห้ามใช้!'));
+
+  // rooms
+  for(const r of f.rooms){
+    const col=TYPE_COLORS[r.type]||TYPE_COLORS.general;
+    const isSel=buildingId===RID(f.n,r.id);
+    const isN=r.id.startsWith('n');
+    const rcol=parseInt(r.id.slice(1))-1;
+    const rx=ISO.rx[rcol], ry=isN?ISO.ny:ISO.sy, rw=ISO.rw, rh=isN?ISO.nh:ISO.sh;
+    const roomTop=isoQuad(rx,ry,rw,rh,H);
+    const rp=poly(roomTop,{fill:isSel?'#f0b27a':col,stroke:isSel?'#b9770e':'#7f8c8d','stroke-width':isSel?3:1.5});
+    rp.classList.add('room'); rp.dataset.f=f.n; rp.dataset.rid=r.id; rp.style.cursor='pointer';
+    g.appendChild(rp);
+    // door
+    const dx=rx+rw/2, dy=isN?(ry+rh):ry;
+    const dp=iso(dx,dy,H+1);
+    g.appendChild(svgEl('circle',{cx:dp.x,cy:dp.y,r:3,fill:'#fff',stroke:'#7f8c8d','stroke-width':1.5}));
+    // labels
+    const lpt=iso(rx+rw/2,ry+rh/2-5,H+1);
+    g.appendChild(svgEl('text',{x:lpt.x,y:lpt.y,'text-anchor':'middle','font-size':12,'font-weight':700,fill:'#2c3e50'},r.name));
+    const ept=iso(rx+rw/2,ry+rh/2+8,H+1);
+    g.appendChild(svgEl('text',{x:ept.x,y:ept.y,'text-anchor':'middle','font-size':9,fill:'#7f8c8d'},r.nameEn));
+  }
+
+  // refuge zones
+  STAIRS.forEach(s=>{
+    const m=s.key==='SA'?ISO.sa:ISO.sb;
+    const rz=s.key==='SA'?m.x+m.w+5:m.x-42;
+    g.appendChild(poly(isoQuad(rz,ISO.cy,38,ISO.ch,H),{fill:'#f9e79f',stroke:'#b9770e','stroke-width':1.5}));
+    const rvp=iso(rz+19,ISO.cy+ISO.ch/2,H+1);
+    g.appendChild(svgEl('text',{x:rvp.x,y:rvp.y,'text-anchor':'middle','font-size':9,'font-weight':700,fill:'#7d6608'},s.key==='SA'?'ที่หลบไฟ A':'ที่หลบไฟ B'));
+  });
+
+  // hazard overlays
+  BLOCKED.forEach(nid=>{
+    const parts=nid.split(':');
+    const k=parts[0],fl=Number(parts[1]),a=parts[2];
+    if(fl!==f.n) return;
+    if(k==='Cx'){
+      const x2d=Number(a);
+      const lx=(x2d-150)/(880-150)*ISO.bw;
+      const ly=ISO.cy+ISO.ch/2;
+      const pt=iso(lx,ly,H+2);
+      g.appendChild(svgEl('circle',{cx:pt.x,cy:pt.y,r:14,fill:'none',stroke:'#c0392b','stroke-width':4}));
+      g.appendChild(polyPath([iso(lx-7,ly-7,H+2),iso(lx+7,ly+7,H+2)],{stroke:'#c0392b','stroke-width':4}));
+      g.appendChild(polyPath([iso(lx+7,ly-7,H+2),iso(lx-7,ly+7,H+2)],{stroke:'#c0392b','stroke-width':4}));
+      const flp=iso(lx,ly-14,H+4);
+      g.appendChild(svgEl('text',{x:flp.x,y:flp.y,'text-anchor':'middle','font-size':9,'font-weight':800,fill:'#c0392b'},'ไฟกั้น'));
+    }
+  });
+
+  // ground floor exits & assembly
+  if(f.isGround){
+    const frontBlocked=BLOCKED.has('EXIT:1:N');
+    const backBlocked=BLOCKED.has('EXIT:1:S');
+    // front exit
+    const fe=iso(W/2,-18,H);
+    g.appendChild(svgEl('rect',{x:fe.x-30,y:fe.y-7,width:60,height:14,fill:frontBlocked?'#f5b7b1':'#d5f5e3',stroke:frontBlocked?'#922b21':'#1e8449','stroke-width':2,rx:4}));
+    g.appendChild(svgEl('text',{x:fe.x,y:fe.y+4,'text-anchor':'middle','font-size':8,'font-weight':700,fill:frontBlocked?'#922b21':'#1e8449'},frontBlocked?'ประตูใหญ่ ⛔':'ประตูใหญ่'));
+    // assembly A
+    const aa=iso(W/2,-45,H);
+    const aaC=svgEl('circle',{cx:aa.x,cy:aa.y,r:10,fill:frontBlocked?'#c0392b':'#1e8449'});aaC.classList.add('pulse');g.appendChild(aaC);
+    g.appendChild(svgEl('text',{x:aa.x,y:aa.y-14,'text-anchor':'middle','font-size':10,'font-weight':800,fill:frontBlocked?'#922b21':'#1e8449'},'จุดรวมพล A'));
+    // back exit
+    const be=iso(W/2,D+18,H);
+    g.appendChild(svgEl('rect',{x:be.x-30,y:be.y-7,width:60,height:14,fill:backBlocked?'#f5b7b1':'#d5f5e3',stroke:backBlocked?'#922b21':'#1e8449','stroke-width':2,rx:4}));
+    g.appendChild(svgEl('text',{x:be.x,y:be.y+4,'text-anchor':'middle','font-size':8,'font-weight':700,fill:backBlocked?'#922b21':'#1e8449'},backBlocked?'ทางออกหลัง ⛔':'ทางออกหลัง'));
+    // assembly B
+    const ab=iso(W/2,D+45,H);
+    const abC=svgEl('circle',{cx:ab.x,cy:ab.y,r:10,fill:backBlocked?'#c0392b':'#1e8449'});abC.classList.add('pulse');g.appendChild(abC);
+    g.appendChild(svgEl('text',{x:ab.x,y:ab.y+20,'text-anchor':'middle','font-size':10,'font-weight':800,fill:backBlocked?'#922b21':'#1e8449'},'จุดรวมพล B'));
+  }
+
+  // route overlay
+  if(cfgPath){
+    const pts=cfgPath.filter(n=>floorOf(n)===f.n).map(isoPtOf);
+    if(pts.length>1){
+      g.appendChild(polyPath(pts,{stroke:'#1e8449','stroke-width':8,'stroke-linecap':'round','stroke-linejoin':'round',opacity:.55}));
+    }
+    const firstPts=cfgPath.filter(n=>floorOf(n)===f.n);
+    if(buildingId&&floorOf(buildingId)===f.n){
+      const sPt=isoPtOf(buildingId);
+      g.appendChild(svgEl('circle',{cx:sPt.x,cy:sPt.y-18,r:14,fill:'#e67e22',stroke:'#fff','stroke-width':3}));
+      g.appendChild(svgEl('text',{x:sPt.x,y:sPt.y-14,'text-anchor':'middle','font-size':11,'font-weight':800,fill:'#fff'},'คุณ'));
+      const prox=firstPts.length>1?firstPts[1]:null;
+      if(prox){
+        if(prox.startsWith('SA')) markStair(g,'SA');
+        if(prox.startsWith('SB')) markStair(g,'SB');
+      }
+    }
+  }
+  return g;
+}
+function markStair(g,key){
+  const m=key==='SA'?ISO.sa:ISO.sb;
+  const H=ISO.wh;
+  const cx=m.x+m.w/2, cy=m.y+m.h/2;
+  const p1=iso(cx,cy-10,H+2),p2=iso(cx,cy+10,H+2);
+  g.appendChild(polyPath([p1,p2],{stroke:'#1e8449','stroke-width':4}));
+  g.appendChild(polyPath([p2,iso(cx+5,cy+5,H+2)],{stroke:'#1e8449','stroke-width':4}));
+  g.appendChild(polyPath([p2,iso(cx-5,cy+5,H+2)],{stroke:'#1e8449','stroke-width':4}));
+}
+
+let cfgPath=null, cfgFloor=null;
+
+/* ================= search ================= */
+function allEntries(){
+  const list=[];
+  for(const f of FLOORS){
+    f.rooms.forEach(r=>{
+      const key=`${r.name} ${r.nameEn} ${r.id}`;
+      list.push({id:RID(f.n,r.id), floor:f.n, label:r.name, en:r.nameEn});
+    });
+  }
+  return list;
+}
+
+function renderSuggest(query){
+  const box=document.getElementById('suggest');
+  const q=(query||'').trim().toLowerCase();
+  if(!q){ box.classList.remove('open'); box.innerHTML=''; return; }
+  const hits=allEntries().filter(e=>(e.label+' '+e.en).toLowerCase().includes(q)).slice(0,12);
+  if(!hits.length){ box.innerHTML='<div class="grp">ไม่พบห้องที่ใกล้เคียง — ลองกด "เริ่มนำทางอพยพ" แล้วเลือกจากรายการ</div>'; box.classList.add('open'); return; }
+  let groups={};
+  hits.forEach(h=>{ (groups[h.floor]=groups[h.floor]||[]).push(h); });
+  let html='';
+  Object.keys(groups).forEach(fl=>{
+    html+=`<div class="grp">ชั้น ${fl}</div>`;
+    groups[fl].forEach(h=>{
+      html+=`<div class="it" data-id="${h.id}">${h.label} <span class="fl">${h.en}</span></div>`;
+    });
+  });
+  box.innerHTML=html; box.classList.add('open');
+}
+
+function renderRoomGrid(){
+  const grid=document.getElementById('roomGrid'); grid.innerHTML='';
+  for(const f of FLOORS.slice().reverse()){
+    f.rooms.forEach(r=>{
+      const b=el('button',{}, `<b>${r.name}</b><span class="fl">${f.label} · ${r.nameEn}</span>`);
+      b.onclick=()=>{
+        selectLocation(RID(f.n,r.id));
+        closeOverlay();
+      };
+      grid.appendChild(b);
+    });
+  }
+}
+
+/* ================= main flow ================= */
+function openOverlay(){
+  renderRoomGrid();
+  document.getElementById('q').value='';
+  const ov=document.getElementById('overlay'); ov.classList.add('open');
+  setTimeout(()=>document.getElementById('q').focus(),50);
+}
+function closeOverlay(){ document.getElementById('overlay').classList.remove('open'); }
+
+function renderMap(){
+  const stage=document.getElementById('stage');
+  const svg=svgEl('svg',{viewBox:'0 0 1000 640',preserveAspectRatio:'xMidYMid meet'});
+  const f=FLOORS[cfgFloor-1];
+  svg.appendChild(floorSvg(f));
+  // interactions
+  svg.querySelectorAll('.room').forEach(rc=>{
+    rc.addEventListener('click',()=>{
+      selectLocation(RID(Number(rc.dataset.f), rc.dataset.rid));
+    });
+  });
+  stage.innerHTML=''; stage.appendChild(svg);
+  // floor tabs
+  const tabs=document.getElementById('floors'); tabs.innerHTML='';
+  FLOORS.forEach(fl=>{
+    const b=el('button',{class:fl.n===cfgFloor?'on':''}, `${fl.label}${fl.isGround?' · ทางออก':''}`);
+    b.onclick=()=>{ cfgFloor=fl.n; renderMap(); };
+    tabs.appendChild(b);
+  });
+
+  // animate route path drawing
+  if(cfgPath){
+    const routePoly=svg.querySelector('polyline[stroke="#1e8449"]');
+    if(routePoly) animateRouteDraw(routePoly);
+  }
+  // pulse "you are here" marker
+  const youMarker=svg.querySelector('circle[fill="#e67e22"]');
+  if(youMarker) pulseMarker(youMarker);
+  // flash blocked hazards on this floor
+  svg.querySelectorAll('[stroke="#c0392b"]').forEach(el=>flashHazard(el));
+}
+
+function routeTargets(fromFloor){
+  if(ability==='wheelchair' && fromFloor>1) return ['SA:'+fromFloor,'SB:'+fromFloor];
+  return ['ASSY:1:A','ASSY:1:B'];
+}
+
+function computeAndRender(){
+  if(!buildingId){ cfgPath=null; renderMap(); return; }
+  const f=floorOf(buildingId); cfgFloor=f;
+  const res=dijkstra(EDGES, buildingId, routeTargets(f));
+  if(!res){ cfgPath=null; renderMap(); renderNoRoute(f); return; }
+  cfgPath=reconstruct(res.prev, res.node);
+  renderMap();
+  renderPanel(f, buildingId, res.node, cfgPath, res.dist);
+}
+
+function selectLocation(nid){
+  buildingId=nid;
+  closeOverlay();
+  document.getElementById('search').value='';
+  document.getElementById('suggest').classList.remove('open');
+  switchTab('route');
+  computeAndRender();
+}
+
+function renderPanel(fromFloor, fromId, destId, path, totalM){
+  const r0=roomById(fromFloor, fromId.split(':')[2]);
+  const ab=ABILITYS[ability]||ABILITYS.normal;
+  const isRefuge = !!destId && destId.startsWith('SA:')||destId.startsWith('SB:');
+  const destName = isRefuge
+    ? (destId.startsWith('SA:') ? 'จุดหลบอัคคี A (Fire Refuge A)' : 'จุดหลบอัคคี B (Fire Refuge B)')
+    : (destId==='ASSY:1:A' ? 'จุดรวมพล A (หน้าอาคาร / Assembly A)' : 'จุดรวมพล B (หลังอาคาร / Assembly B)');
+  const estMin = Math.max(1, Math.ceil(totalM/(ab.speed*60))) + (isRefuge?0:Math.max(0,fromFloor-1)*2);
+  const steps=buildSteps(path);
+  const box=document.getElementById('steps'); box.innerHTML='';
+
+  if(hazards.length){
+    const hr=el('div',{class:'step warn'});
+    hr.appendChild(el('span',{class:'num'},'🔥'));
+    hr.appendChild(el('span',{class:'txt'},`มีเหตุ ${hazards.length} จุด: ${hazards.map(h=>h.label).join(' · ')} — ระบบอ้อมไปเส้นทางที่ปลอดภัยแล้ว`));
+    box.appendChild(hr);
+  }
+
+  const sum=el('div',{class:'summary'}, `
+    <div>🚩 ไปยัง <b>${destName}</b></div>
+    <div class="row"><span>รวมระยะทาง</span><b>~${Math.round(totalM)} ม.</b></div>
+    <div class="row"><span>เวลาประมาณ (${ab.label})</span><b>~${estMin} นาที</b></div>
+  `);
+  box.appendChild(sum);
+
+  steps.steps.forEach((s,i)=>{
+    const d=el('div',{class:'step done',style:'opacity:0;transform:translateY(15px)'}, ``);
+    d.appendChild(el('span',{class:'num'}, i+1));
+    d.appendChild(el('span',{class:'txt'}, `${s.txt}${s.sub?`<div class="sub">${s.sub}</div>`:''}`));
+    box.appendChild(d);
+  });
+
+  if(isRefuge){
+    const wr=el('div',{class:'step warn',style:'opacity:0;transform:translateY(15px)'});
+    wr.appendChild(el('span',{class:'num'},'♿'));
+    wr.appendChild(el('span',{class:'txt'},'คุณไม่ควรลงบันไดเอง — พักที่จุดหลบอัคคีนี้ ติดสัญญาณ (ไฟฉาย/นกหวีด) แล้วรอเจ้าหน้าที่กู้ภัยมานำทางลง แจ้งผู้ควบคุมอาคารว่ามีผู้ต้องการความช่วยเหลือที่จุดนี้'));
+    box.appendChild(wr);
+  }
+  const w=el('div',{class:'step warn',style:'opacity:0;transform:translateY(15px)'});
+  w.appendChild(el('span',{class:'num'}, '!'));
+  w.appendChild(el('span',{class:'txt'},'ห้ามใช้ลิฟต์ในเหตุเพลิงไหม้ · เดินตามป้ายเขียว "หนีไฟ/EXIT" · ถ้าเส้นทางถูกเปลวไฟกั้น ให้ย้อนกลับและใช้เส้นทางที่แสดง'));
+  box.appendChild(w);
+
+  // stagger fade-in steps
+  const stepEls=box.querySelectorAll('.step');
+  if(stepEls.length) staggerFadeIn(stepEls, 60);
+
+  document.getElementById('panelTitle').textContent='🧭 เส้นทางอพยพจากชั้น '+fromFloor+(ability!=='normal'?' ('+ab.label+')':'');
+  document.getElementById('panelKick').innerHTML=`<b>${r0.name}</b> (${FLOORS[fromFloor-1].label}) → <b>${destName}</b>`;
+  window._routeCtx={
+    location: `${r0.name} (ชั้น ${fromFloor})`,
+    route: `${destName} · ~${Math.round(totalM)} ม. · ~${estMin} นาที`,
+  };
+}
+
+function renderNoRoute(fromFloor){
+  const box=document.getElementById('steps'); box.innerHTML='';
+  const w=el('div',{class:'step warn'});
+  w.appendChild(el('span',{class:'num'},'⛔'));
+  w.appendChild(el('span',{class:'txt'},'เส้นทางไปจุดปลอดภัยถูกกั้นทุกทิศ — อยู่ในห้อง อย่าออกมา ปิดประตู อุดช่องระบายควันด้วยผ้าเปียก แจ้งเหตุที่หมายเลขฉุกเฉิน แล้วรอการช่วยเหลือ'));
+  box.appendChild(w);
+  document.getElementById('panelTitle').textContent='⛔ ติดทุกเส้นทาง';
+  document.getElementById('panelKick').innerHTML=`ชั้น ${fromFloor} · ${hazards.map(h=>h.label).join(' · ')}`;
+  window._routeCtx={ location:`ชั้น ${fromFloor}`, route:'ทุกเส้นทางถูกกั้น — ต้องรอการช่วยเหลือ' };
+}
+
+function resetView(){
+  buildingId=null; cfgPath=null; cfgFloor=1;
+  document.getElementById('search').value='';
+  document.getElementById('suggest').classList.remove('open');
+  document.getElementById('panelTitle').textContent='🧭 แนะนำเส้นทางอพยพ';
+  document.getElementById('panelKick').textContent='กด "เริ่มนำทางอพยพ" แล้วบอกห้องที่คุณอยู่ เพื่อให้ระบบหาเส้นทางไปจุดปลอดภัย';
+  document.getElementById('steps').innerHTML='';
+  switchTab('route');
+  renderMap();
+}
+
+/* ================= hazard modal ================= */
+function openHazardModal(){
+  document.getElementById('hzTarget').value='stairA';
+  document.getElementById('hzFloor').value='all';
+  updateHzSummary();
+  document.getElementById('hazardOverlay').classList.add('open');
+}
+function closeHazardModal(){ document.getElementById('hazardOverlay').classList.remove('open'); }
+function updateHzSummary(){
+  const t=document.getElementById('hzTarget').value;
+  const fl=document.getElementById('hzFloor').value;
+  const s=document.getElementById('hzSummary');
+  s.style.display='';
+  s.innerHTML = t==='corridor'
+    ? `จะกั้น "โถงทางเดินกลาง" ของ${fl==='all'?'ทุกชั้น':'ชั้น '+fl} — โถงแยกเป็นสองฝั่ง เส้นทางข้ามจะถูกอ้อม`
+    : `จะกั้น "${TARGET_LABEL[t]}"${fl==='all'?' (ทั้งอาคาร)':' ที่ชั้น '+fl} — ทุกเส้นทางผ่านจุดนี้จะถูกอ้อมจนกว่าจะปลด`;
+}
+function readHazardModal(){
+  return { target:document.getElementById('hzTarget').value, floor: document.getElementById('hzFloor').value==='all'?'all':Number(document.getElementById('hzFloor').value) };
+}
+function hzAddFrom(target, floor){
+  const fl = (target==='exitFront'||target==='exitBack') ? 'all' : floor;
+  hazards.push({ id:'hz'+(hzBubble++), target, floors:fl, label: TARGET_LABEL[target]+(fl==='all'?' (ทั้งอาคาร)':' (ชั้น '+fl+')') });
+  refreshEdges(); computeAndRender();
+  toast('🚨 กั้น '+TARGET_LABEL[target]+' — เส้นทางคำนวณใหม่แล้ว');
+}
+function hzClearTarget(target){
+  const before=hazards.length;
+  hazards=hazards.filter(h=>h.target!==target);
+  if(hazards.length<before){ refreshEdges(); computeAndRender(); toast('✅ ปลด '+TARGET_LABEL[target]); return true; }
+  return false;
+}
+
+/* ================= toast + panel tabs ================= */
+let toastTimer;
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2800);
+}
+let panelTab='route';
+function switchTab(t){
+  panelTab=t;
+  document.getElementById('tabRoute').classList.toggle('on', t==='route');
+  document.getElementById('tabChat').classList.toggle('on', t==='chat');
+  document.getElementById('steps').style.display = t==='route' ? '' : 'none';
+  document.getElementById('chatView').classList.toggle('open', t==='chat');
+  if(t==='chat') setTimeout(()=>document.getElementById('chatIn').focus(),30);
+}
+
+/* ================= AI chat ================= */
+const CHIPS=[
+  {t:'ฉันอยู่บันได A ชั้น 3', h:'📍 อยู่บันได A ชั้น 3'},
+  {t:'ฉันอยู่ห้องสมุด ชั้น 5', h:'📍 อยู่ห้องสมุด'},
+  {t:'บันได B ไฟกั้น', h:'🔥 กั้นบันได B'},
+  {t:'ปลดบันได A', h:'✅ ปลดบันได A'},
+  {t:'เส้นทางนี้ใช้เวลากี่นาที?', h:'⏱ ใช้เวลากี่นาที'},
+];
+let msgs=[];
+function addChat(role, html){ msgs.push({role,html}); renderChat(); }
+function renderChat(){
+  const box=document.getElementById('chatMsgs'); box.innerHTML='';
+  msgs.forEach(m=>box.appendChild(el('div',{class:'msg '+(m.role==='me'?'me':(m.role==='busy'?'busy':'ai'))}, m.html)));
+  box.scrollTop=box.scrollHeight;
+}
+function renderChatChips(){
+  const box=document.getElementById('chatChips'); box.innerHTML='';
+  CHIPS.forEach(c=>{
+    const b=el('button',{}, c.h);
+    b.onclick=()=>{ document.getElementById('chatIn').value=c.t; sendChat(); };
+    box.appendChild(b);
+  });
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function pretty(text){
+  let s=escapeHtml(text||'');
+  s=s.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*(.+?)\*/g,'$1<i>$2</i>');
+  return s.replace(/\n/g,'<br>');
+}
+
+/* ================= anime.js animations ================= */
+function animateRouteDraw(polyline){
+  if(!polyline || !window.anime) return;
+  const len=polyline.getTotalLength();
+  polyline.style.strokeDasharray=len;
+  polyline.style.strokeDashoffset=len;
+  anime({targets:polyline,strokeDashoffset:[len,0],duration:1200,easing:'easeOutQuad'});
+}
+function pulseMarker(circleEl){
+  if(!circleEl || !window.anime) return;
+  anime({targets:circleEl,r:[15,22,15],loop:true,direction:'alternate',easing:'easeInOutSine',duration:1000});
+}
+function fadeIn(el,dur=300){
+  if(!el || !window.anime) return;
+  anime({targets:el,opacity:[0,1],translateY:[10,0],duration:dur,easing:'easeOutQuad'});
+}
+function staggerFadeIn(elements,stagger=80){
+  if(!elements?.length || !window.anime) return;
+  anime({targets:elements,opacity:[0,1],translateY:[15,0],delay:anime.stagger(stagger),duration:400,easing:'easeOutQuad'});
+}
+function slideIn(el,fromX=300,dur=300){
+  if(!el || !window.anime) return;
+  anime({targets:el,translateX:[fromX,0],opacity:[0,1],duration:dur,easing:'easeOutQuad'});
+}
+function shake(el){
+  if(!el || !window.anime) return;
+  anime({targets:el,translateX:[0,-10,10,-10,10,0],duration:500,easing:'easeOutQuad'});
+}
+function flashHazard(el,color='#c0392b'){
+  if(!el || !window.anime) return;
+  anime({targets:el,stroke:[color,'inherit'],strokeWidth:['6px','inherit'],duration:800,loop:3,direction:'alternate',easing:'easeInOutSine'});
+}
+
+/* ================= end animations ================= */
+function buildCtx(){
+  const rc=window._routeCtx||null;
+  return {
+    location: rc?rc.location:'ยังไม่ระบุ',
+    route: rc?rc.route:'ยังไม่คำนวณ',
+    hazards: hazards.map(h=>h.label),
+  };
+}
+async function callAI(mode, message, context){
+  const r=await fetch('/api/ai', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({mode, message, context:context||{}})});
+  if(!r.ok) throw new Error('server error');
+  return r.json();
+}
+let busy=null;
+function busyOn(){ busy={role:'busy',html:'🤖 AI กำลังคิด…'}; msgs.push(busy); renderChat(); }
+function busyOff(){ if(busy){ const i=msgs.indexOf(busy); if(i>-1) msgs.splice(i,1); busy=null; renderChat(); } }
+
+async function sendChat(){
+  const inp=document.getElementById('chatIn'); const text=inp.value.trim();
+  if(!text) return; inp.value='';
+  addChat('me', escapeHtml(text));
+  busyOn();
+  try{
+    const loc=/อยู่|ใน|ชั้น|floor|room|ใกล้|near|นั่ง|ผมอยู่|ฉันอยู่|เรา/i.test(text);
+    const haz=/บันได|stair|ไฟ|ควัน|กั้น|block|fire|smoke|ทางออก|exit|ประตูหนี/i.test(text);
+    if(loc) await locateAction(text);
+    else if(haz) await hazardAction(text);
+    else await chatAction(text);
+  }catch(e){
+    busyOff();
+    addChat('ai','⚠️ ติดต่อระบบ AI ไม่ได้ (ต้องรันผ่าน server /api/ai) — ใช้ช่องค้นหาหรือกดห้องบนแผนที่แทนได้');
+  }
+}
+
+async function chatAction(text){
+  const r=await callAI('chat', text, buildCtx());
+  busyOff();
+  if(r.ok && r.text) addChat('ai', pretty(r.text));
+  else addChat('ai','⚠️ '+pretty(r.aiError||r.error||'AI ไม่ตอบ'));
+}
+
+function localFindRoom(text){
+  const q=text.toLowerCase();
+  let best=null;
+  for(const e of allEntries()){
+    const hay=(e.label+' '+e.en+' '+e.id).toLowerCase();
+    let score=0;
+    const words=q.split(/[^a-z0-9ก-๙]+/).filter(w=>w.length>1);
+    words.forEach(w=>{ if(hay.includes(w)) score++; });
+    if(q && hay.includes(q)) score+=3;
+    if(score>0 && (!best||score>best.score)) best={e,score};
+  }
+  return best;
+}
+
+async function locateAction(text){
+  const local=localFindRoom(text);
+  if(local){
+    selectLocation(local.e.id);
+    busyOff();
+    addChat('ai','📍 เจอแล้ว: <b>'+escapeHtml(local.e.label)+'</b> (ชั้น '+local.e.floor+') — ข้อมูลเส้นทางอยู่แท็บ <b>🧭 เส้นทาง</b>');
+    return;
+  }
+  const r=await callAI('locate', text);
+  busyOff();
+  const p=r.parsed;
+  const loc=resolveRoom(p&&p.floor, p&&p.room);
+  if(loc){
+    selectLocation(loc.id);
+    addChat('ai','📍 AI ระบุตำแหน่ง: <b>'+escapeHtml(loc.label)+'</b> (ชั้น '+p.floor+') — เส้นทางอยู่ในแท็บ <b>🧭 เส้นทาง</b>');
+    return;
+  }
+  if(p && p.floor) addChat('ai','🧭 ดูเหมือนชั้น '+p.floor+' แต่ระบุห้องไม่ชัด — บอกชื่อห้องเพิ่ม เช่น "ห้องประชุมใหญ่" หรือกดเลือกห้องบนแผนที่');
+  else addChat('ai','ยังหาไม่พบ — ลอง "ฉันอยู่ห้อง Library ชั้น 5" หรือกดที่ห้องบนแผนที่');
+}
+
+function resolveRoom(floor, room){
+  if(!floor) return null;
+  const fo=FLOORS[floor-1]; if(!fo) return null;
+  const q=String(room||'').toLowerCase();
+  const match=r=>{
+    const hay=(r.id+' '+r.name+' '+r.nameEn).toLowerCase();
+    return q && (hay.includes(q) || q===r.id.toLowerCase());
+  };
+  for(const r of fo.rooms){ if(String(r.id).toLowerCase()===q) return {id:RID(floor,r.id),label:r.name,floor}; }
+  for(const r of fo.rooms){ if(match(r)) return {id:RID(floor,r.id),label:r.name,floor}; }
+  return null;
+}
+
+function localParseHazard(t){
+  const isA=/บันได\s*a|stair\s*a|บันไดa/gi.test(t);
+  const isB=/บันได\s*b|stair\s*b|บันไดb/gi.test(t);
+  let target=null;
+  if(isA) target='stairA';
+  else if(isB) target='stairB';
+  else if(/โถง|ทางเดิน|corridor|ตรงกลาง|กลางโถง/i.test(t)) target='corridor';
+  else if(/ทางออก|จุดรวมพล|ประตูหนี|exit|assembly/i.test(t)) target = /หน้า|north|assembly\s*a|ทางเข้าหลัก/i.test(t)?'exitFront':'exitBack';
+  if(!target) return null;
+  const fm=t.match(/ชั้น\s*(\d)|floor\s*(\d)/i);
+  const floor=fm?Number(fm[1]||fm[2]):null;
+  const all=/ทั้งหมด|ทุกชั้น|ทั้งตึก|ทั้งอาคาร|building|ทั้งชั้น/gi.test(t);
+  const action=/ปลด|clear|หายแล้ว|เปิด|unblock|ปลอดภัยแล้ว/i.test(t)?'clear':'block';
+  return { target, floor, allFloors: all||floor==null, action };
+}
+
+async function hazardAction(text){
+  const local=localParseHazard(text);
+  let p=local;
+  if(!p){
+    const r=await callAI('hazard', text);
+    p=r.parsed;
+  }
+  busyOff();
+  if(!p || !p.target){ addChat('ai','ไม่เข้าใจการรายงานเหตุ — ลองแบบ "บันได B ชั้น 3 ไฟกั้น" หรือใช้ปุ่ม <b>🚨 รายงานเหตุ</b>'); return; }
+  if(p.action==='clear'){
+    const ok=hzClearTarget(p.target);
+    if(ok) addChat('ai','✅ ปลดเส้นทาง '+TARGET_LABEL[p.target]+' แล้ว — คำนวณเส้นทางใหม่ให้แล้ว');
+    else addChat('ai','ไม่ได้มีการกั้น '+TARGET_LABEL[p.target]+' อยู่ก่อนหน้านี้');
+    return;
+  }
+  const floor = p.allFloors? 'all' : (p.floor||'all');
+  hzAddFrom(p.target, floor);
+  addChat('ai','🚨 บันทึกเหตุ: <b>'+TARGET_LABEL[p.target]+'</b>'+(p.floor?(' ชั้น '+p.floor):'')+' ถูกกั้น — ระบบอ้อมให้อัตโนมัติจนกว่าจะปลด');
+}
+
+/* ================= init ================= */
+(function init(){
+  EDGES=buildEdges(); BLOCKED=computeBlocked();
+  cfgFloor=1;
+  renderMap();
+  renderHazardChips();
+  document.getElementById('btnStart').addEventListener('click', openOverlay);
+  document.getElementById('btnClose').addEventListener('click', closeOverlay);
+  document.getElementById('btnReset').addEventListener('click', resetView);
+  document.getElementById('btnReport').addEventListener('click', openHazardModal);
+  document.getElementById('hzClose').addEventListener('click', closeHazardModal);
+  document.getElementById('hzTarget').addEventListener('change', updateHzSummary);
+  document.getElementById('hzFloor').addEventListener('change', updateHzSummary);
+  document.getElementById('hzBlock').addEventListener('click', ()=>{ const v=readHazardModal(); hzAddFrom(v.target, v.floor); closeHazardModal(); });
+  document.getElementById('hzClear').addEventListener('click', ()=>{ const v=readHazardModal(); const ok=hzClearTarget(v.target); closeHazardModal(); if(!ok) toast('ไม่มีเหตุที่ '+TARGET_LABEL[v.target]+' ที่จะปลด'); });
+  document.getElementById('ability').addEventListener('change', (e)=>{ ability=e.target.value; if(ability==='wheelchair') toast('♿ โหมดวีลแชร์ — ระบบจะพาไปจุดหลบอัคคีและรอเจ้าหน้าที่'); computeAndRender(); });
+  document.getElementById('tabRoute').addEventListener('click', ()=>switchTab('route'));
+  document.getElementById('tabChat').addEventListener('click', ()=>switchTab('chat'));
+  document.getElementById('chatSend').addEventListener('click', sendChat);
+  document.getElementById('chatIn').addEventListener('keydown', (e)=>{ if(e.key==='Enter') sendChat(); });
+  renderChatChips();
+  addChat('ai','สวัสดีครับ 🚨 บอกได้เลยว่า <b>“คุณอยู่ที่ไหน”</b> เช่น <i>“ชั้น 3 ห้องคอมพิวเตอร์”</i> หรือรายงานเหตุ เช่น <i>“บันได A ชั้น 2 ไฟกั้น”</i>');
+  const si=document.getElementById('search');
+  si.addEventListener('input', ()=>renderSuggest(si.value));
+  si.addEventListener('keydown', (e)=>{
+    if(e.key==='Enter'){
+      const first=document.querySelector('#suggest .it');
+      if(first){ selectLocation(first.dataset.id); }
+    }
+  });
+  document.getElementById('suggest').addEventListener('click', (e)=>{
+    const it=e.target.closest('.it'); if(!it) return;
+    selectLocation(it.dataset.id);
+  });
+  document.addEventListener('click', (e)=>{
+    if(!e.target.closest('.search-wrap')) document.getElementById('suggest').classList.remove('open');
+  });
+  window._api={selectLocation, openOverlay, closeOverlay, resetView, dijkstra, reconstruct, buildSteps, buildEdges,
+    computeAndRender, hzAddFrom, hzClearTarget, sendChat, locateAction, hazardAction, chatAction};
+})();
+</script>
+</body>
+</html>
